@@ -8,7 +8,9 @@ const styles = StyleSheet.create({
         height: deviceHeight,
     },
     container: {
-        position: 'absolute'
+        position: 'absolute',
+        width: '100%',
+        height: '100%'
     },
     header: {
         marginTop: 15,
@@ -16,6 +18,10 @@ const styles = StyleSheet.create({
         width: '100%',
         flexDirection: 'row',
         justifyContent: 'space-between'
+    },
+    headerText: {
+        fontSize: 22,
+        color: '#fff'
     },
     icon: {
         color: 'white',
@@ -37,7 +43,7 @@ const styles = StyleSheet.create({
         marginLeft: 20,
         marginTop: 14
     },
-    user: {
+    addLLocation: {
         width: 30,
         height: 30,
     },
@@ -56,25 +62,44 @@ const styles = StyleSheet.create({
         marginTop: 50,
         marginLeft: 30
     },
+    searchContainer: {
+        height: 280
+    },
     formSearch: {
-        // borderWidth: 1,
-        // borderColor: '#fff',
-        // borderRadius: 40,
-        // flexDirection: 'row',
-        // justifyContent: 'space-between',
-        // paddingHorizontal: 15,
+        borderWidth: 1,
+        borderColor: '#fff',
+        borderRadius: 40,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15,
+        paddingRight: 50,
         alignItems: 'center',
-        marginLeft: 10,
+        marginHorizontal: 10,
         marginTop: 20,
     },
-    // searchInput: {
-    //     color: '#fff',
-    //     fontSize: 20,
-    //     width: '90%'
-    // },
+    searchInput: {
+        color: '#fff',
+        fontSize: 20,
+        width: '100%'
+    },
+    suggestionsContainer: {
+        maxHeight: 150, // Giới hạn chiều cao của danh sách gợi ý
+        overflow: 'hidden', // Ẩn phần dữ liệu ngoài giới hạn chiều cao
+        marginTop: 20,
+        marginHorizontal: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(236,236,236, 0.3)',
+        borderRadius: 20,
+    },
+    suggestionItem: {
+        padding: 10,
+    },
+    suggestionText: {
+        color: '#fff'
+    },
     locationList: {
-        marginTop: 230,
-        marginLeft: 20
+        marginLeft: 20,
+        marginTop: 20
     },
     locationListText: {
         color: '#fff',

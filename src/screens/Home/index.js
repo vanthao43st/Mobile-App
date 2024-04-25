@@ -1,12 +1,10 @@
-import { View, Text, ImageBackground, TouchableOpacity, FlatList, Image, TouchableWithoutFeedback, Keyboard, Modal } from 'react-native'
+import { View, Text, ImageBackground, TouchableOpacity, FlatList, TouchableWithoutFeedback, Keyboard, Modal, TextInput } from 'react-native'
 import React, { useState } from 'react'
 import styles from './styles'
 import IonIcon from 'react-native-vector-icons/Ionicons'
+import AntDesign from 'react-native-vector-icons/AntDesign'
 import Card from '../Card';
-import DropDownPicker from 'react-native-dropdown-picker';
-import CITY_LIST from '../../api/vn.json'
-import { COLORS } from '../../components/theme';
-import { deviceWidth } from '../../components/Dimension';
+import cityList from '../../api/vn.json'
 
 const DismissKeyboard = ({ children }) => (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -15,58 +13,106 @@ const DismissKeyboard = ({ children }) => (
 )
 
 const Home = (props) => {
-
     const cities = [
         {
-            name: 'Hà Nội',
-            city: 'Hanoi',
+            city: 'Hà Nội',
             lat: "21.0000",
-            lng: "105.8500",
+            lon: "105.8500",
             image: require('../../assets/img/hanoi.jpg')
         },
         {
-            name: 'Đà Nẵng',
             city: 'Đà Nẵng',
             lat: "16.0748",
-            lng: "108.2240",
+            lon: "108.2240",
             image: require('../../assets/img/danang.jpg')
         },
         {
-            name: 'Cần Thơ',
             city: 'Cần Thơ',
             lat: "10.0333",
-            lng: "105.7833",
+            lon: "105.7833",
             image: require('../../assets/img/cantho.jpg')
         },
         {
-            name: 'Hồ Chí Minh',
-            city: 'Ho Chi Minh City',
+            city: 'Hồ Chí Minh',
             lat: "10.7756",
-            lng: "106.7019",
+            lon: "106.7019",
             image: require('../../assets/img/hochiminh.jpg')
         },
         {
-            name: 'Huế',
             city: 'Huế',
             lat: "16.4667",
-            lng: "107.5792",
+            lon: "107.5792",
             image: require('../../assets/img/hue.jpg')
         },
-        // {
-        //     name: 'Quảng nam',
-        //     image: require('../../assets/img/hoian.jpeg')
-        // }
     ]
 
     const [visible, setVisible] = useState(false)
-    const [open, setOpen] = useState(false)
-    const [value, setValue] = useState(null)
-    const [items, setItems] = useState(CITY_LIST)
+    const [value, setValue] = useState()
+    const [city, setCity] = useState([])
+    const [flag] = useState('Home')
+    const { temperature } = props.route.params || {};
+
+    function removeVietnameseTones(str) {
+        const accentsMap = {
+            'a': 'á|à|ả|ã|ạ|ă|ắ|ặ|ằ|ẳ|ẵ|â|ấ|ầ|ẩ|ẫ|ậ',
+            'd': 'đ',
+            'e': 'é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ',
+            'i': 'í|ì|ỉ|ĩ|ị',
+            'o': 'ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ',
+            'u': 'ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự',
+            'y': 'ý|ỳ|ỷ|ỹ|ỵ',
+            'A': 'Á|À|Ả|Ã|Ạ|Ă|Ắ|Ặ|Ằ|Ẳ|Ẵ|Â|Ấ|Ầ|Ẩ|Ẫ|Ậ',
+            'D': 'Đ',
+            'E': 'É|È|Ẻ|Ẽ|Ẹ|Ê|Ế|Ề|Ể|Ễ|Ệ',
+            'I': 'Í|Ì|Ỉ|Ĩ|Ị',
+            'O': 'Ó|Ò|Ỏ|Õ|Ọ|Ô|Ố|Ồ|Ổ|Ỗ|Ộ|Ơ|Ớ|Ờ|Ở|Ỡ|Ợ',
+            'U': 'Ú|Ù|Ủ|Ũ|Ụ|Ư|Ứ|Ừ|Ử|Ữ|Ự',
+            'Y': 'Ý|Ỳ|Ỷ|Ỹ|Ỵ'
+        };
+
+        for (const [nonAccentedChar, accentedChars] of Object.entries(accentsMap)) {
+            str = str.replace(new RegExp(accentedChars, 'g'), nonAccentedChar);
+        }
+        return str;
+    }
+
+    const getLocation = () => {
+        const result = city.find(item => removeVietnameseTones(item.city).toLowerCase() === removeVietnameseTones(value).toLowerCase())
+        return result ? result : null
+    }
+
+
+    // Hàm lọc dữ liệu dựa trên input
+    const handleSearch = (val) => {
+        setValue(val);
+        if (!val || val === '') {
+            setCity([]);
+        } else {
+            setCity(
+                cityList.filter((item) =>
+                    removeVietnameseTones(item.city).toLowerCase().includes(removeVietnameseTones(val).toLowerCase())
+                )
+            );
+        }
+    };
+
+    const handlePress = (item) => {
+        props.navigation.navigate('Detail', { city: item.city, lat: item.lat, lon: item.lon, temperature: temperature })
+        setValue()
+        setCity([])
+    }
+
+    const searchPress = () => {
+        props.navigation.navigate('Detail', { city: getLocation.city, lat: getLocation.lat, lon: getLocation.lon, temperature: temperature })
+        setValue()
+        setCity([])
+    }
+
 
     // Hàm để ngăn không cho sự kiện onPress của cha lan truyền xuống con
     const stopPropagation = (event) => {
         event.stopPropagation();
-    };
+    }
 
     return (
         //Hide Keyboard when click outside TextInput
@@ -74,6 +120,7 @@ const Home = (props) => {
             <View>
                 {/* Modal to hide setting when clicking outside */}
                 <Modal
+                    animationType='fade'
                     transparent
                     visible={visible}
                     onRequestClose={() => setVisible(false)}
@@ -85,10 +132,19 @@ const Home = (props) => {
                                 {/* setting */}
                                 {visible &&
                                     <View style={styles.setting}>
-                                        <TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setVisible(false)
+                                            }}
+                                        >
                                             <Text style={styles.settingText}>Chia sẻ</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                props.navigation.navigate('Setting', { flag: flag, temperature: temperature })
+                                                setVisible(false)
+                                            }}
+                                        >
                                             <Text style={styles.settingText}>Cài đặt</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -105,8 +161,9 @@ const Home = (props) => {
                         <TouchableOpacity onPress={() => setVisible(true)}>
                             <IonIcon name="menu" style={styles.icon} />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => { }}>
-                            <Image source={require('../../assets/img/user.png')} style={styles.user} />
+                        <Text style={styles.headerText}>Current Location</Text>
+                        <TouchableOpacity onPress={() => { props.navigation.navigate('AddLocation') }}>
+                            <AntDesign name="plus" size={20} style={styles.icon} />
                         </TouchableOpacity>
                     </View>
 
@@ -114,82 +171,46 @@ const Home = (props) => {
                         <Text style={styles.title}>Weather App</Text>
                         <Text style={styles.searchText}>Search city by the name</Text>
 
-                        <View style={styles.formSearch}>
-                            {/* <TextInput
-                                placeholder='Enter the city'
-                                placeholderTextColor={'#fff'}
-                                style={styles.searchInput}
-                                value={city}
-                                onChangeText={(val) => setCity(val)}
-                            />
-                            <TouchableOpacity onPress={() => { props.navigation.navigate('Detail', { name: city }) }}>
-                                <IonIcon name="search" style={styles.icon} />
-                            </TouchableOpacity> */}
-
-                            <DropDownPicker
-                                open={open}
-                                TouchableOpacity={false}
-                                searchable
-                                searchPlaceholder='Type the city name'
-                                searchTextInputStyle={{
-                                    borderColor: COLORS.accent,
-                                    fontWeight: '700',
-                                    fontSize: 15
-                                }}
-                                searchContainerStyle={{
-                                    paddingVertical: 15,
-                                    // borderBottomColor: COLORS.accent
-                                }}
-                                placeholder='Select a city'
-                                placeholderStyle={{
-                                    color: COLORS.darkGrey,
-                                }}
-                                containerStyle={{
-                                    marginRight: 10,
-                                    width: deviceWidth - 45
-                                }}
-                                labelStyle={{
-                                    color: COLORS.primary,
-                                    fontWeight: 'bold',
-                                    fontSize: 20
-                                }}
-                                listItemLabelStyle={{
-                                    color: COLORS.primary,
-                                    fontWeight: '700',
-                                }}
-                                showTickIcon={false}
-                                dropDownContainerStyle={{
-                                    borderColor: COLORS.primary,
-
-                                }}
-                                ArrowUpIconComponent={() =>
-                                    <IonIcon name='chevron-up-sharp' size={20} color={COLORS.accent} />
-                                }
-                                ArrowDownIconComponent={() =>
-                                    <IonIcon name='chevron-down-sharp' size={20} color={COLORS.accent} />
-                                }
-                                value={value}
-                                items={items.map(({ city }) => ({
-                                    label: city,
-                                    value: city
-                                }))}
-                                setOpen={setOpen}
-                                setValue={setValue}
-                                setItems={setItems}
-                                onSelectItem={(item) => {
-                                    // Chuyển tới trang Detail và truyền giá trị city
-                                    props.navigation.navigate('Detail', { city: item.value });
-                                }}
-                            />
+                        <View style={styles.searchContainer}>
+                            <View style={styles.formSearch}>
+                                <TextInput
+                                    placeholder='Enter the city'
+                                    placeholderTextColor={'#fff'}
+                                    style={styles.searchInput}
+                                    value={value}
+                                    onChangeText={(val) => handleSearch(val)}
+                                />
+                                <TouchableOpacity onPress={() => searchPress()}>
+                                    <IonIcon name="search" style={styles.icon} />
+                                </TouchableOpacity>
+                            </View>
+                            {value === '' || city.length === 0 ?
+                                <View></View>
+                                :
+                                <View style={styles.suggestionsContainer}>
+                                    <FlatList
+                                        data={city}
+                                        keyExtractor={(item, index) => index.toString()}
+                                        renderItem={({ item }) => (
+                                            <TouchableOpacity
+                                                style={styles.suggestionItem}
+                                                onPress={() => handlePress(item)}
+                                            >
+                                                <Text style={styles.suggestionText}>{item.city}</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    />
+                                </View>
+                            }
                         </View>
 
                         <View style={styles.locationList}>
-                            <Text style={styles.locationListText}>Locations</Text>
+                            <Text style={styles.locationListText}>Some famous places</Text>
                             <FlatList
                                 horizontal
                                 data={cities}
                                 renderItem={({ item }) => (
-                                    <Card name={item.name} image={item.image} city={item.city} navigation={props.navigation} />
+                                    <Card city={item.city} image={item.image} lat={item.lat} lon={item.lon} navigation={props.navigation} temperature={temperature} />
                                 )}
                             />
                         </View>

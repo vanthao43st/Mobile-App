@@ -1,92 +1,73 @@
-import { View, Text, ImageBackground, TouchableOpacity, ScrollView, TouchableWithoutFeedback, TouchableOpacityComponent } from 'react-native'
+import { View, Text, ImageBackground, TouchableOpacity, ScrollView, TouchableWithoutFeedback, TouchableOpacityComponent, ActivityIndicator, Modal } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import WeatherIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import styles from './styles';
 import { API_KEY, baseURL } from '../../api/Constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { deviceHeight, deviceWidth } from '../../components/Dimension';
+
+const WEATHER_STORAGE_KEY = 'WEATHER_DATA';
+const AIR_QUALITY_STORAGE_KEY = 'AIR_QUALITY_DATA';
 
 const Detail = (props) => {
-    const [hide, setHide] = useState(false)
-    const [weatherData, setWeatherData] = useState()
-    const [airQualityData, setAirQualityData] = useState()
-    // const [lat, setLat] = useState()
-    // const [lng, setLng] = useState()
-    const { city } = props.route.params;
+    const [weatherData, setWeatherData] = useState(null)
+    const [airQualityData, setAirQualityData] = useState(null)
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const { city, lat, lon, temperature } = props.route.params;
+    const temp = temperature ? temperature : 'C'
     const [time] = useState(new Date((weatherData?.sys?.sunrise + weatherData?.timezone) * 1000).toLocaleTimeString('en-GB'))
+    const [flag] = useState('Detail')
+    const [visible, setVisible] = useState(false)
 
-    // useEffect(() => {
-    //     fetch(`${baseURL}/weather?q=${city}&appid=${API_KEY}`)
-    //         .then(res => res.json())
-    //         .then(res => {
-    //             setLat(res.coord.lat)
-    //             setLng(res.coord.lon)
-    //             setWeatherData(res)
-    //         })
-    //         .catch(err => console.log(err))
-    // }, [city])
-
-    // useEffect(() => {
-    //     if (lat && lng) {
-    //         fetch(`${baseURL}/air_pollution/forecast?lat=${lat}&lon=${lng}&appid=${API_KEY}`)
-    //             .then(res => res.json())
-    //             .then(res => setAirQuality(res.list))
-    //             .catch(err => console.log(err))
-    //     }
-    // }, [lat, lng])
-
-    // useEffect(() => {
-    //     async function fetchData() {
-    //         try {
-    //             const weatherResponse = await fetch(`${baseURL}/weather?q=${city}&appid=${API_KEY}`);
-    //             const weatherData = await weatherResponse.json();
-    //             setLat(weatherData.coord.lat);
-    //             setLng(weatherData.coord.lon);
-    //             setWeatherData(weatherData);
-
-    //             if (lat && lng) {
-    //                 const airQualityResponse = await fetch(`${baseURL}/air_pollution/forecast?lat=${lat}&lon=${lng}&appid=${API_KEY}`);
-    //                 const airQualityData = await airQualityResponse.json();
-    //                 setAirQuality(airQualityData.list);
-    //             }
-    //         } catch (err) {
-    //             console.log(err);
-    //         }
-    //     }
-
-    //     fetchData()
-    // }, [city, lat, lng])
 
     useEffect(() => {
         // Gọi API thời tiết ở đây
-        fetchWeatherData();
+        fetchData()
     }, []); // Dependency array rỗng để chạy một lần
 
-    const fetchWeatherData = async () => {
-        const weatherUrl = `${baseURL}/weather?q=${city}&appid=${API_KEY}`;
-
+    const fetchData = async () => {
+        setIsLoading(true);
         try {
-            const weatherResponse = await fetch(weatherUrl);
-            const weatherData = await weatherResponse.json();
-            setWeatherData(weatherData);
-            // Gọi API chất lượng không khí với vĩ độ và kinh độ lấy được
-            fetchAirQualityData(weatherData.coord.lat, weatherData.coord.lon);
+            const savedWeatherData = await AsyncStorage.getItem(WEATHER_STORAGE_KEY);
+            const savedAirQualityData = await AsyncStorage.getItem(AIR_QUALITY_STORAGE_KEY);
+
+            if (savedWeatherData && savedAirQualityData) {
+                setWeatherData(JSON.parse(savedWeatherData));
+                setAirQualityData(JSON.parse(savedAirQualityData));
+            } else {
+                const weatherUrl = `${baseURL}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}`
+                const airQualityUrl = `${baseURL}/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}`
+
+                const [weatherResponse, airQualityResponse] = await Promise.all(
+                    [
+                        fetch(weatherUrl),
+                        fetch(airQualityUrl)
+                    ]
+                )
+
+                const weatherData = await weatherResponse.json();
+                const airQualityData = await airQualityResponse.json();
+
+                setWeatherData(weatherData);
+                setAirQualityData(airQualityData.list);
+            }
         } catch (error) {
-            console.error('Có lỗi xảy ra khi gọi API thời tiết:', error);
+            setError('Có lỗi xảy ra khi gọi API thời tiết')
+            console.error(error);
+        } finally {
+            setIsLoading(false)
         }
-    };
+    }
 
-    const fetchAirQualityData = async (lat, lon) => {
-        const airQualityUrl = `${baseURL}/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+    if (isLoading) {
+        return <ActivityIndicator size="large" style={{ justifyContent: 'center', width: deviceWidth, height: deviceHeight }} />;
+    }
 
-        try {
-            const airQualityResponse = await fetch(airQualityUrl);
-            const airQualityData = await airQualityResponse.json();
-            setAirQualityData(airQualityData.list);
-        } catch (error) {
-            console.error('Có lỗi xảy ra khi gọi API chất lượng không khí:', error);
-        }
-    };
-
+    if (error) {
+        return <Text style={styles.error}>{error}</Text>;
+    }
 
     const StateIcon = ({ iconCode }) => {
         // Ánh xạ mã icon từ API với tên icon của thư viện bạn đang sử dụng
@@ -130,68 +111,111 @@ const Detail = (props) => {
         return <IonIcon name={iconName} size={25} color="#fff" />;
     };
 
+    // Hàm để ngăn không cho sự kiện onPress của cha lan truyền xuống con
+    const stopPropagation = (event) => {
+        event.stopPropagation();
+    }
+
     return (
-        <TouchableWithoutFeedback onPress={() => setHide(false)}>
-            <View style={styles.container}>
-                {hide &&
-                    <View style={styles.setting}>
-                        <TouchableOpacity>
-                            <Text style={styles.settingText}>Chia sẻ</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity>
-                            <Text style={styles.settingText}>Cài đặt</Text>
+        <View style={styles.container}>
+            {/* Modal to hide setting when clicking outside */}
+            <Modal
+                animationType='fade'
+                transparent
+                visible={visible}
+                onRequestClose={() => setVisible(false)}
+            >
+                <TouchableWithoutFeedback onPress={() => setVisible(false)}>
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        {/* Sử dụng stopPropagation để ngăn sự kiện lan truyền */}
+                        <TouchableWithoutFeedback onPress={stopPropagation}>
+                            {/* setting */}
+                            {visible &&
+                                <View style={styles.setting}>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setVisible(false)
+                                        }}
+                                    >
+                                        <Text style={styles.settingText}>Chia sẻ</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            props.navigation.navigate('Setting', { flag: flag, city: city, lat: lat, lon: lon, temperature: temp })
+                                            setVisible(false)
+                                        }}
+                                    >
+                                        <Text style={styles.settingText}>Cài đặt</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            }
+                        </TouchableWithoutFeedback>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
+
+            <ImageBackground source={require('../../assets/img/background.jpg')} style={styles.backgroundImg} />
+            <ScrollView style={styles.scrollView}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => { props.navigation.navigate('Home', { temperature: temp }) }}>
+                        <IonIcon name="arrow-back-sharp" style={styles.headerIcon} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerText}>{city}</Text>
+                    <TouchableOpacity onPress={() => setVisible(true)}>
+                        <IonIcon name="menu" style={styles.headerIcon} />
+                    </TouchableOpacity>
+                </View>
+
+                {
+                    weatherData &&
+                    <View style={styles.tempContainer}>
+                        {
+                            temp === 'C' ?
+                                (
+
+                                    <View style={styles.tempText}>
+                                        <Text style={styles.tempTextNumber}>
+                                            {(weatherData?.main?.temp - 273).toFixed(2)}&deg;
+                                        </Text>
+                                        <Text style={{ fontSize: 50, fontWeight: 'bold', color: '#fff', lineHeight: 65, marginLeft: 5 }}>C</Text>
+                                    </View>
+                                )
+                                :
+                                (
+                                    <View style={styles.tempText}>
+                                        <Text style={styles.tempTextNumber}>
+                                            {((weatherData?.main?.temp - 273) * 1.8 + 32).toFixed(2)}&deg;
+                                        </Text>
+                                        <Text style={{ fontSize: 50, fontWeight: 'bold', color: '#fff', lineHeight: 65, marginLeft: 5 }}>F</Text>
+                                    </View>
+                                )
+                        }
+                        <Text style={styles.tempState}>
+                            {<StateIcon iconCode={weatherData?.weather?.[0]?.icon} />}
+                            {' '}
+                            {weatherData?.weather?.[0]?.main}
+                        </Text>
+                        <TouchableOpacity style={styles.airQuality} onPress={() => { props.navigation.navigate('AirQualityDetail', { airQualityData, city }) }}>
+                            <Text style={styles.airQualityText}>
+                                <WeatherIcon name="weather-cloudy" style={styles.airQualityIcon} />
+                                <Text> AQI </Text>
+                                <Text>{airQualityData?.[0].components.pm2_5.toFixed(0)}</Text>
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 }
 
-                <ImageBackground source={require('../../assets/img/background.jpg')} style={styles.backgroundImg} />
-                <ScrollView style={styles.scrollView}>
-                    <View style={styles.header}>
-                        <TouchableOpacity onPress={() => { props.navigation.navigate('Home') }}>
-                            <IonIcon name="arrow-back-sharp" style={styles.headerIcon} />
-                        </TouchableOpacity>
-                        <Text style={styles.headerText}>{city}</Text>
-                        <TouchableOpacity onPress={() => setHide(true)}>
-                            <IonIcon name="menu" style={styles.headerIcon} />
-                        </TouchableOpacity>
-                    </View>
-
-                    {
-                        weatherData &&
-                        <View style={styles.tempContainer}>
-                            <View style={styles.tempText}>
-                                <Text style={styles.tempTextNumber}>
-                                    {(weatherData?.main?.temp - 273).toFixed(2)}&deg;
-                                </Text>
-                                <Text style={{ fontSize: 50, fontWeight: 'bold', color: '#fff', lineHeight: 65, marginLeft: 5 }}>C</Text>
-                            </View>
-                            <Text style={styles.tempState}>
-                                {<StateIcon iconCode={weatherData?.weather?.[0]?.icon} />}
-                                {' '}
-                                {weatherData?.weather?.[0]?.main}
-                            </Text>
-                            <TouchableOpacity style={styles.airQuality} onPress={() => { props.navigation.navigate('AirQualityDetail', { airQualityData, city }) }}>
-                                <Text style={styles.airQualityText}>
-                                    <WeatherIcon name="weather-cloudy" style={styles.airQualityIcon} />
-                                    <Text> AQI </Text>
-                                    <Text>{airQualityData?.[0].components.pm2_5.toFixed(0)}</Text>
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    }
-
-                    <View style={styles.weatherDetail}>
-                        <Text style={styles.weatherDetailText}>Weather Detail</Text>
+                <View style={styles.weatherDetail}>
+                    <Text style={styles.weatherDetailText}>Weather Detail</Text>
+                    <View>
                         <View>
-                            <View>
-                                <Text>Sunrise: { }</Text>
-                            </View>
+                            <Text>Sunrise: { }</Text>
                         </View>
                     </View>
+                </View>
 
-                </ScrollView>
-            </View>
-        </TouchableWithoutFeedback>
+            </ScrollView>
+        </View>
     )
 }
 

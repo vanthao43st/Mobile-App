@@ -6,6 +6,7 @@ import Panel from '../Panel'
 
 const AirQualityList = (props) => {
     const { airQualityData, city } = props.route.params;
+    const first24Items = airQualityData.slice(0, 28)
 
     return (
         <View>
@@ -19,12 +20,13 @@ const AirQualityList = (props) => {
             </View>
             <View>
                 <FlatList
-                    data={airQualityData}
+                    data={first24Items}
                     renderItem={({ item }) => (
-                        <View>
+                        <View style={{ marginBottom: 10 }}>
                             <Panel data={item} />
                         </View>
                     )}
+                    contentContainerStyle={{ paddingBottom: 30 }}
                     initialNumToRender={5} // giới hạn số lượng phần tử hiển thị từ đầu
                     maxToRenderPerBatch={5} // giới hạn số lượng phần tử hiển thị trong mỗi lần cuộn
 

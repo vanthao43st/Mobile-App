@@ -1,15 +1,12 @@
 import { StyleSheet } from 'react-native'
 import { deviceHeight, deviceWidth } from '../../components/Dimension'
+import { COLORS } from '../../components/theme'
 
 const styles = StyleSheet.create({
-    backgroundImg: {
-        width: deviceWidth,
-        height: deviceHeight
-    },
     setting: {
         position: 'absolute',
         top: 18,
-        right: 8,
+        right: 15,
         zIndex: 9999,
         width: 140,
         height: 100,
@@ -22,13 +19,27 @@ const styles = StyleSheet.create({
         marginLeft: 20,
         marginTop: 14
     },
+    error: {
+        width: deviceWidth,
+        height: deviceHeight,
+        color: COLORS.primary,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        fontSize: 20,
+        textAlignVertical: 'center',
+        backgroundColor: '#f1f1f1'
+    },
+    backgroundImg: {
+        width: deviceWidth,
+        height: deviceHeight
+    },
     scrollView: {
         position: 'absolute',
         width: '100%',
     },
     header: {
         marginTop: 20,
-        paddingRight: 20,
+        paddingRight: 5,
         width: '100%',
         flexDirection: 'row',
         justifyContent: 'space-between',
