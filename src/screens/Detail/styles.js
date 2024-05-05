@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     },
     weatherDetail: {
         marginTop: 150,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        // backgroundColor: 'rgba(255,255,255,0.2)',
         paddingVertical: 10,
         marginHorizontal: 15,
         borderRadius: 15,
