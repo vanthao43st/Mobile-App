@@ -4,13 +4,13 @@ import { deviceHeight, deviceWidth } from '../../components/Dimension'
 
 const styles = StyleSheet.create({
     backgroundImg: {
-        width: deviceWidth,
-        height: deviceHeight,
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover', // Đảm bảo hình nền phủ đầy không gian mà không bị méo
+        position: 'absolute'
     },
     container: {
-        position: 'absolute',
-        width: '100%',
-        height: '100%'
+        marginBottom: 30
     },
     header: {
         marginTop: 15,
@@ -22,6 +22,25 @@ const styles = StyleSheet.create({
     headerText: {
         fontSize: 22,
         color: '#fff'
+    },
+    tempNumber: {
+        color: '#fff',
+        fontSize: 60,
+    },
+    tempState: {
+        color: '#fff',
+        fontSize: 22,
+    },
+    buttonDetail: {
+        marginTop: 30,
+        backgroundColor: '#6e6e6e',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 30
+    },
+    detail: {
+        color: '#fff',
+        fontSize: 18
     },
     icon: {
         color: 'white',
@@ -63,7 +82,7 @@ const styles = StyleSheet.create({
         marginLeft: 30
     },
     searchContainer: {
-        height: 280
+        maxHeight: 280
     },
     formSearch: {
         borderWidth: 1,
@@ -99,7 +118,7 @@ const styles = StyleSheet.create({
     },
     locationList: {
         marginLeft: 20,
-        marginTop: 20
+        marginTop: 50
     },
     locationListText: {
         color: '#fff',

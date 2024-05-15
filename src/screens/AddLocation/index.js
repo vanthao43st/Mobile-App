@@ -15,7 +15,7 @@ const Location = (props) => {
     return (
         <DismissKeyboard>
             <View style={styles.container}>
-                <TouchableOpacity onPress={() => { props.navigation.navigate('Home', { temperature: null }) }} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+                <TouchableOpacity onPress={() => { props.navigation.navigate('Home') }} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
                     <IonIcon name="arrow-back-sharp" style={styles.backIcon} />
                     <Text style={styles.backIcon}>Back</Text>
                 </TouchableOpacity>

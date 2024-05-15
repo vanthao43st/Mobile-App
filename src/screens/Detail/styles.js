@@ -31,10 +31,11 @@ const styles = StyleSheet.create({
     },
     backgroundImg: {
         width: deviceWidth,
-        height: deviceHeight
+        height: deviceHeight,
+        resizeMode: 'cover', // Đảm bảo hình nền phủ đầy không gian mà không bị méo
+        position: 'absolute'
     },
-    scrollView: {
-        position: 'absolute',
+    viewContainer: {
         width: '100%',
     },
     header: {
@@ -55,9 +56,11 @@ const styles = StyleSheet.create({
         fontSize: 22
     },
     tempContainer: {
-        padding: 10,
+        padding: 5,
         marginTop: deviceHeight * 0.1,
-        width: '100%'
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     tempText: {
         flexDirection: 'row',
@@ -83,25 +86,21 @@ const styles = StyleSheet.create({
         top: 15
     },
     tempState: {
-        alignSelf: 'center',
         color: '#fff',
-        marginTop: 15,
         fontSize: 20,
-        justifyContent: 'center'
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     airQuality: {
         marginTop: 20,
         paddingHorizontal: 15,
         paddingVertical: 10,
-        alignItems: 'center',
+        // alignItems: 'center',
         backgroundColor: '#c9c9d0',
         borderRadius: 20,
-        alignSelf: 'center',
-
     },
     airQualityText: {
         color: '#000',
-        opacity: 1
     },
     airQualityIcon: {
         marginTop: 10,
@@ -126,7 +125,7 @@ const styles = StyleSheet.create({
         fontSize: 25
     },
     weatherDetail: {
-        marginTop: 150,
+        marginTop: 100,
         // backgroundColor: 'rgba(255,255,255,0.2)',
         paddingVertical: 10,
         marginHorizontal: 15,
@@ -137,6 +136,60 @@ const styles = StyleSheet.create({
         fontSize: 25,
         fontWeight: '600',
         textAlign: 'center',
+        marginBottom: 30
+    },
+    timeItem: {
+        marginTop: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 30,
+        backgroundColor: 'rgba(158, 221, 248, 0.2)',
+        borderRadius: 20,
+        paddingVertical: 10,
+        width: 130
+    },
+    textTimetem: {
+        color: '#fff',
+        fontSize: 16,
+        marginBottom: 7,
+    },
+    textTempItem: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold'
+    },
+    windSpeed: {
+        color: '#fff',
+        fontSize: 16,
+    },
+    icon: {
+        zIndex: 99999,
+        width: 35,
+        height: 35,
+    },
+    containerDtail: {
+        backgroundColor: 'rgba(158, 221, 248, 0.2)',
+        marginTop: 50,
+        paddingTop: 15,
+        paddingHorizontal: 40,
+        borderRadius: 20
+    },
+    detailItemSun: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: 20
+    },
+    detailItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 20
+    },
+    detailItemSpace: {
+        marginBottom: 20
+    },
+    detailItemText: {
+        color: '#fff',
+        fontSize: 16
     }
 })
 

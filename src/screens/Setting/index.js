@@ -2,56 +2,88 @@ import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'r
 import React, { useState } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import styles from './styles'
+import { useWeather } from '../../hooks/useTemperature'
+import CustomModal from '../../components/Modal'
 
 const Setting = (props) => {
-    const { flag, city, lat, lon, temperature } = props.route.params || {};
-    const [visible, setVisible] = useState(false)
-    const [selectedTemperatureUnit, setSelectedTemperatureUnit] = useState(temperature ? temperature : 'C')
+    const { flag, city, lat, lon } = props.route.params;
+    const [visibleTemperature, setVisibleTemperature] = useState(false)
+    const [visibleWindSpeed, setVisibleWindSpeed] = useState(false)
+    const [visibleAtmosphericPressure, setVisibleAtmosphericPressure] = useState(false)
 
-    const isUnitTemperatureSelected = (unit) => selectedTemperatureUnit === unit;
+    const { temperatureUnit, setTemperatureUnit, windSpeedUnit, setWindSpeedUnit, atmosphericPressureUnit, setAtmosphericPressureUnit } = useWeather();
 
     return (
         <View style={styles.container}>
             {/* Modal to hide temperature unit when clicking outside */}
-            <Modal
+            {/* <Modal
                 animationType='fade'
                 transparent={true}
-                visible={visible}
-                onRequestClose={() => setVisible(false)}
+                visible={visibleTemperature}
+                onRequestClose={() => setVisibleTemperature(false)}
             >
                 <TouchableOpacity
                     style={styles.modalOverlay}
                     activeOpacity={1}
-                    onPressOut={() => setVisible(false)}
+                    onPressOut={() => setVisibleTemperature(false)}
                 >
                     <View style={styles.temperatureUnit}>
                         <TouchableOpacity
                             onPress={() => {
-                                setSelectedTemperatureUnit('C')
-                                setVisible(false)
+                                setTemperatureUnit('C')
+                                setVisibleTemperature(false)
                             }}
                         >
                             <Text style={isUnitTemperatureSelected('C') ? styles.selected : styles.temperatureUnitText} >&deg;C</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => {
-                                setSelectedTemperatureUnit('F')
-                                setVisible(false)
+                                setTemperatureUnit('F')
+                                setVisibleTemperature(false)
                             }}
                         >
                             <Text style={isUnitTemperatureSelected('F') ? styles.selected : styles.temperatureUnitText}>&deg;F</Text>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
-            </Modal>
+            </Modal> */}
+
+            <CustomModal
+                visible={visibleTemperature}
+                setVisible={setVisibleTemperature}
+                selectedUnit={temperatureUnit}
+                setSelectedUnit={setTemperatureUnit}
+                unitOptions={['°C', '°F']}
+                containerStyle={styles.temperatureUnitContainer}
+            />
+
+            <CustomModal
+                visible={visibleWindSpeed}
+                setVisible={setVisibleWindSpeed}
+                selectedUnit={windSpeedUnit}
+                setSelectedUnit={setWindSpeedUnit}
+                unitOptions={['Kilometers per hour (km/h)', 'Meters per second (m/s)', 'Miles per hour (mph)']}
+                containerStyle={styles.windSpeedUnitContainer}
+            />
+
+            <CustomModal
+                visible={visibleAtmosphericPressure}
+                setVisible={setVisibleAtmosphericPressure}
+                selectedUnit={atmosphericPressureUnit}
+                setSelectedUnit={setAtmosphericPressureUnit}
+                unitOptions={['Standard atmosphere (atm)', 'Millibar (mbar)', 'Inches of mercury (inHg)', 'Millimeters of mercury (mmHg)']}
+                containerStyle={styles.atmosphericPressureUnitContainer}
+            />
 
             <View style={styles.header}>
                 <TouchableOpacity
                     onPress={() => {
                         if (flag === 'Home')
-                            props.navigation.navigate('Home', { temperature: selectedTemperatureUnit })
+                            props.navigation.navigate('Home')
+
                         else if (flag === 'Detail')
-                            props.navigation.navigate('Detail', { city: city, lat: lat, lon: lon, temperature: selectedTemperatureUnit })
+                            props.navigation.navigate('Detail', { city: city, lat: lat, lon: lon })
+
                     }}
                     style={{ marginTop: 20 }}
                 >
@@ -60,10 +92,10 @@ const Setting = (props) => {
                 <Text style={styles.headerText}>Setting</Text>
             </View>
 
-            <View style={styles.mainContainer}>
+            <View>
                 <Text style={{ fontSize: 22 }}>Units</Text>
                 <TouchableOpacity
-                    onPress={() => setVisible(true)}
+                    onPress={() => setVisibleTemperature(true)}
                     style={styles.unitComponent}
                 >
                     <View style={styles.columnTitle}>
@@ -71,18 +103,13 @@ const Setting = (props) => {
                     </View>
                     <View style={{ flex: 1 }}></View>
                     <View style={styles.columnUnit}>
-                        {
-                            selectedTemperatureUnit === 'C' ?
-                                <Text style={styles.unit}>&deg;C</Text>
-                                :
-                                <Text style={styles.unit}>&deg;F</Text>
-                        }
+                        <Text style={styles.unit}>{temperatureUnit}</Text>
                         <IonIcon name='chevron-expand-outline' size={16} style={styles.icon} />
                     </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    onPress={() => { }}
+                    onPress={() => setVisibleWindSpeed(true)}
                     style={styles.unitComponent}
                 >
                     <View style={styles.columnTitle}>
@@ -90,13 +117,13 @@ const Setting = (props) => {
                     </View>
                     <View style={{ flex: 1 }}></View>
                     <View style={styles.columnUnit}>
-                        <Text style={styles.unit}>kilometers per hour (km/h)</Text>
+                        <Text style={styles.unit}>{windSpeedUnit}</Text>
                         <IonIcon name='chevron-expand-outline' size={16} style={styles.icon} />
                     </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    onPress={() => { }}
+                    onPress={() => setVisibleAtmosphericPressure(true)}
                     style={styles.unitComponent}
                 >
                     <View style={styles.columnTitle}>
@@ -104,10 +131,11 @@ const Setting = (props) => {
                     </View>
                     <View style={{ flex: 1 }}></View>
                     <View style={styles.columnUnit}>
-                        <Text style={styles.unit}>standard atmosphere (atm)</Text>
+                        <Text style={styles.unit}>{atmosphericPressureUnit}</Text>
                         <IonIcon name='chevron-expand-outline' size={16} style={styles.icon} />
                     </View>
                 </TouchableOpacity>
+
             </View>
         </View >
     )

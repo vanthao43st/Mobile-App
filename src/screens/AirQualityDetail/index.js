@@ -99,7 +99,7 @@ const AirQualityDetail = (props) => {
 
                     <TouchableOpacity onPress={() => { props.navigation.navigate('AirQualityList', { city, airQualityData }) }}>
                         <View style={styles.moreInfo}>
-                            <Text style={styles.moreInfoText}>More information about air quality</Text>
+                            <Text style={styles.moreInfoText}>Air Quality Forcast</Text>
                             <IonIcon name='chevron-forward' size={20} style={styles.moreInfoIcon} />
                         </View>
                     </TouchableOpacity>

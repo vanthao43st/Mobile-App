@@ -1,10 +1,14 @@
-import { View, Text, ImageBackground, TouchableOpacity, FlatList, TouchableWithoutFeedback, Keyboard, Modal, TextInput } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, ImageBackground, TouchableOpacity, FlatList, TouchableWithoutFeedback, Keyboard, Modal, TextInput, ScrollView, PermissionsAndroid, Image, LogBox } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import styles from './styles'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Card from '../Card';
 import cityList from '../../api/vn.json'
+import Geolocation from '@react-native-community/geolocation';
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { WEATHER_API_KEY, HERE_API, weather_baseURL } from '../../api/Constants'
+import { useWeather } from '../../hooks/useTemperature'
 
 const DismissKeyboard = ({ children }) => (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -49,8 +53,86 @@ const Home = (props) => {
     const [visible, setVisible] = useState(false)
     const [value, setValue] = useState()
     const [city, setCity] = useState([])
+    const [currentPosition, setCurrentPosition] = useState({
+        lat: '',
+        lon: '',
+    })
+    const [currentCity, setCurrentCity] = useState('')
+    const [currentWeatherData, setCurrentWeatherData] = useState(null)
     const [flag] = useState('Home')
-    const { temperature } = props.route.params || {};
+    const { temperatureUnit } = useWeather()
+
+    useEffect(() => {
+        // Gọi API thời tiết ở đây
+        Geolocation.getCurrentPosition(
+            info => {
+                setCurrentPosition({
+                    lat: info.coords.latitude,
+                    lon: info.coords.longitude
+                });
+                // console.log(info.coords.latitude + ' - ' + info.coords.longitude)
+            },
+
+            error => console.error("Error getting location: ", error),
+            { enableHighAccuracy: true }  // Yêu cầu độ chính xác cao
+        );
+
+        if (currentPosition.lat && currentPosition.lon) {
+            fetchData()
+        }
+    }, [currentPosition.lat]);
+
+    const fetchData = async () => {
+        try {
+            const savedCurrentWeatherData = await AsyncStorage.getItem(`WEATHER_DATA_${currentPosition.lat}_${currentPosition.lon}`);
+            const savedCurrentCityData = await AsyncStorage.getItem(`CURRENT_CITY_DATA_${currentPosition.lat}_${currentPosition.lon}`);
+
+            console.log(savedCurrentCityData)
+            // console.log(savedCurrentWeatherData)
+
+            if (savedCurrentWeatherData && savedCurrentCityData) {
+                const item = JSON.parse(savedCurrentWeatherData)
+                console(item.time)
+                if (now - item.time < 900 * 1000) {
+                    console.log(1111111111111)
+                    setCurrentWeatherData(item.data);
+                    setCurrentCity(savedCurrentCityData)
+                } else {
+                    console.log(22222222222222)
+                    await AsyncStorage.removeItem(`WEATHER_DATA_${currentPosition.lat}_${currentPosition.lon}`);
+                    await AsyncStorage.removeItem(`CURRENT_CITY_DATA_${currentPosition.lat}_${currentPosition.lon}`)
+                    fetchData()
+                }
+            } else {
+                console.log(33333333)
+                const currentWeatherUrl = `${weather_baseURL}/current.json?key=${WEATHER_API_KEY}&q=${currentPosition.lat},${currentPosition.lon}&aqi=no`
+                const currentCityUrl = `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${currentPosition.lat},${currentPosition.lon}&lang=vi-VI&apiKey=${HERE_API}`
+
+                const [currentWeatherResponse, currentCityResponse] = await Promise.all(
+                    [
+                        fetch(currentWeatherUrl),
+                        fetch(currentCityUrl)
+                    ]
+                )
+
+                const currentWeatherData = await currentWeatherResponse.json();
+                const currentCityData = await currentCityResponse.json()
+
+                setCurrentWeatherData(currentWeatherData);
+                setCurrentCity(currentCityData.items[0].address.city)
+
+                // Lưu vào AsyncStorage
+                await AsyncStorage.setItem(`WEATHER_DATA_${currentPosition.lat}_${currentPosition.lon}`, JSON.stringify({
+                    time: new Date().getTime(),
+                    data: currentWeatherData
+                }));
+                await AsyncStorage.setItem(`CURRENT_CITY_DATA_${currentPosition.lat}_${currentPosition.lon}`, JSON.stringify(currentCityData.items[0].address.city))
+            }
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
     function removeVietnameseTones(str) {
         const accentsMap = {
@@ -97,13 +179,13 @@ const Home = (props) => {
     };
 
     const handlePress = (item) => {
-        props.navigation.navigate('Detail', { city: item.city, lat: item.lat, lon: item.lon, temperature: temperature })
+        props.navigation.navigate('Detail', { city: item.city, lat: item.lat, lon: item.lon })
         setValue()
         setCity([])
     }
 
     const searchPress = () => {
-        props.navigation.navigate('Detail', { city: getLocation.city, lat: getLocation.lat, lon: getLocation.lon, temperature: temperature })
+        props.navigation.navigate('Detail', { city: getLocation.city, lat: getLocation.lat, lon: getLocation.lon })
         setValue()
         setCity([])
     }
@@ -114,108 +196,153 @@ const Home = (props) => {
         event.stopPropagation();
     }
 
+    LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
+    console.error = (message) => {
+        if (typeof message === 'string' && message.includes("VirtualizedLists should")) {
+            return;
+        }
+    }
+
     return (
         //Hide Keyboard when click outside TextInput
         <DismissKeyboard>
-            <View>
-                {/* Modal to hide setting when clicking outside */}
-                <Modal
-                    animationType='fade'
-                    transparent
-                    visible={visible}
-                    onRequestClose={() => setVisible(false)}
-                >
-                    <TouchableWithoutFeedback onPress={() => setVisible(false)}>
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            {/* Sử dụng stopPropagation để ngăn sự kiện lan truyền */}
-                            <TouchableWithoutFeedback onPress={stopPropagation}>
-                                {/* setting */}
-                                {visible &&
-                                    <View style={styles.setting}>
-                                        <TouchableOpacity
-                                            onPress={() => {
-                                                setVisible(false)
-                                            }}
-                                        >
-                                            <Text style={styles.settingText}>Chia sẻ</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            onPress={() => {
-                                                props.navigation.navigate('Setting', { flag: flag, temperature: temperature })
-                                                setVisible(false)
-                                            }}
-                                        >
-                                            <Text style={styles.settingText}>Cài đặt</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                }
+            <View style={{ flex: 1 }}>
+                <ImageBackground source={require('../../assets/img/background.png')} style={styles.backgroundImg} imageStyle={{ opacity: 0.8, backgroundColor: '#000' }} />
+                <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+                    <View style={{ flex: 1 }}>
+                        {/* Modal to hide setting when clicking outside */}
+                        <Modal
+                            animationType='fade'
+                            transparent
+                            visible={visible}
+                            onRequestClose={() => setVisible(false)}
+                        >
+                            <TouchableWithoutFeedback onPress={() => setVisible(false)}>
+                                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                    {/* Sử dụng stopPropagation để ngăn sự kiện lan truyền */}
+                                    <TouchableWithoutFeedback onPress={stopPropagation}>
+                                        {/* setting */}
+                                        {visible &&
+                                            <View style={styles.setting}>
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        setVisible(false)
+                                                    }}
+                                                >
+                                                    <Text style={styles.settingText}>Chia sẻ</Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        props.navigation.navigate('Setting', { flag: flag })
+                                                        setVisible(false)
+                                                    }}
+                                                >
+                                                    <Text style={styles.settingText}>Cài đặt</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        }
+                                    </TouchableWithoutFeedback>
+                                </View>
                             </TouchableWithoutFeedback>
-                        </View>
-                    </TouchableWithoutFeedback>
-                </Modal>
+                        </Modal>
 
 
-                <ImageBackground source={require('../../assets/img/background.jpg')} style={styles.backgroundImg} imageStyle={{ opacity: 0.8, backgroundColor: '#000' }} />
-                <View style={styles.container}>
-                    <View style={styles.header}>
-                        <TouchableOpacity onPress={() => setVisible(true)}>
-                            <IonIcon name="menu" style={styles.icon} />
-                        </TouchableOpacity>
-                        <Text style={styles.headerText}>Current Location</Text>
-                        <TouchableOpacity onPress={() => { props.navigation.navigate('AddLocation') }}>
-                            <AntDesign name="plus" size={20} style={styles.icon} />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.containerMain}>
-                        <Text style={styles.title}>Weather App</Text>
-                        <Text style={styles.searchText}>Search city by the name</Text>
-
-                        <View style={styles.searchContainer}>
-                            <View style={styles.formSearch}>
-                                <TextInput
-                                    placeholder='Enter the city'
-                                    placeholderTextColor={'#fff'}
-                                    style={styles.searchInput}
-                                    value={value}
-                                    onChangeText={(val) => handleSearch(val)}
-                                />
-                                <TouchableOpacity onPress={() => searchPress()}>
-                                    <IonIcon name="search" style={styles.icon} />
+                        <View style={styles.container}>
+                            <View style={styles.header}>
+                                <TouchableOpacity onPress={() => setVisible(true)}>
+                                    <IonIcon name="menu" style={styles.icon} />
+                                </TouchableOpacity>
+                                {
+                                    currentCity ?
+                                        <Text style={styles.headerText}>{currentCity}</Text>
+                                        :
+                                        <Text style={styles.headerText}>Current Location</Text>
+                                }
+                                <TouchableOpacity onPress={() => { props.navigation.navigate('AddLocation') }}>
+                                    <AntDesign name="plus" size={20} style={styles.icon} />
                                 </TouchableOpacity>
                             </View>
-                            {value === '' || city.length === 0 ?
-                                <View></View>
-                                :
-                                <View style={styles.suggestionsContainer}>
-                                    <FlatList
-                                        data={city}
-                                        keyExtractor={(item, index) => index.toString()}
-                                        renderItem={({ item }) => (
-                                            <TouchableOpacity
-                                                style={styles.suggestionItem}
-                                                onPress={() => handlePress(item)}
-                                            >
-                                                <Text style={styles.suggestionText}>{item.city}</Text>
+
+                            <View style={styles.containerMain}>
+                                {
+                                    currentCity ?
+                                        <View style={{ alignItems: 'center' }}>
+                                            {/* <Text style={styles.title}>{currentCity}</Text> */}
+                                            {
+                                                temperatureUnit === '°C' ?
+                                                    <Text style={styles.tempNumber}>{currentWeatherData.current.temp_c}&deg;C</Text>
+                                                    :
+                                                    <Text style={styles.tempNumber}>{currentWeatherData.current.temp_f}&deg;F</Text>
+                                            }
+                                            <Text style={styles.tempState}>
+                                                <Image
+                                                    source={{ uri: `https:${currentWeatherData.current.condition.icon}` }}
+                                                    style={{ width: 40, height: 40 }}
+                                                />
+                                                {currentWeatherData.current.condition.text}
+                                            </Text>
+                                            <TouchableOpacity style={styles.buttonDetail} onPress={() => props.navigation.navigate('Detail', { city: currentCity, lat: currentPosition.lat, lon: currentPosition.lon })}>
+                                                <Text style={styles.detail}>Detail</Text>
                                             </TouchableOpacity>
+                                        </View>
+                                        :
+                                        <Text style={styles.title}>Weather App</Text>
+                                }
+
+                                <Text style={styles.searchText}>Search city by the name</Text>
+
+                                <View style={styles.searchContainer}>
+                                    <View style={styles.formSearch}>
+                                        <TextInput
+                                            placeholder='Enter the city'
+                                            placeholderTextColor={'#fff'}
+                                            style={styles.searchInput}
+                                            value={value}
+                                            onChangeText={(val) => handleSearch(val)}
+                                        />
+                                        <TouchableOpacity onPress={() => searchPress()}>
+                                            <IonIcon name="search" style={styles.icon} />
+                                        </TouchableOpacity>
+                                    </View>
+                                    {value === '' || city.length === 0 ?
+                                        <View></View>
+                                        :
+                                        <View style={styles.suggestionsContainer}>
+                                            <FlatList
+                                                data={city}
+                                                keyExtractor={(item, index) => index.toString()}
+                                                renderItem={({ item }) => (
+                                                    <TouchableOpacity
+                                                        style={styles.suggestionItem}
+                                                        onPress={() => handlePress(item)}
+                                                    >
+                                                        <Text style={styles.suggestionText}>{item.city}</Text>
+                                                    </TouchableOpacity>
+                                                )}
+                                                initialNumToRender={5}
+                                                maxToRenderPerBatch={5}
+                                                nestedScrollEnabled={true}
+                                                // contentContainerStyle={{ flexGrow: 1 }}
+                                                pointerEvents="auto" // Cho phép sự kiện cuộn ở đây
+                                            />
+                                        </View>
+                                    }
+                                </View>
+
+                                <View style={styles.locationList}>
+                                    <Text style={styles.locationListText}>Some famous places</Text>
+                                    <FlatList
+                                        horizontal
+                                        data={cities}
+                                        renderItem={({ item }) => (
+                                            <Card city={item.city} image={item.image} lat={item.lat} lon={item.lon} navigation={props.navigation} />
                                         )}
                                     />
                                 </View>
-                            }
-                        </View>
-
-                        <View style={styles.locationList}>
-                            <Text style={styles.locationListText}>Some famous places</Text>
-                            <FlatList
-                                horizontal
-                                data={cities}
-                                renderItem={({ item }) => (
-                                    <Card city={item.city} image={item.image} lat={item.lat} lon={item.lon} navigation={props.navigation} temperature={temperature} />
-                                )}
-                            />
+                            </View>
                         </View>
                     </View>
-                </View>
+                </ScrollView>
             </View>
         </DismissKeyboard >
     )

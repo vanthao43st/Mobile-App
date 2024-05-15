@@ -7,15 +7,53 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
         flex: 1
     },
-    temperatureUnit: {
+    // temperatureUnit: {
+    //     position: 'absolute',
+    //     top: 170,
+    //     left: 15,
+    //     width: 120,
+    //     height: 100,
+    //     backgroundColor: 'white',
+    //     borderRadius: 20,
+    //     // padding: 20,
+    //     shadowColor: '#000',
+    //     shadowOffset: {
+    //         width: 0,
+    //         height: 2,
+    //     },
+    //     shadowOpacity: 0.25,
+    //     shadowRadius: 4,
+    //     elevation: 5,
+    // },
+    // modalOverlay: {
+    //     flex: 1,
+    //     justifyContent: 'center',
+    //     alignItems: 'center',
+    //     backgroundColor: 'rgba(0, 0, 0, 0.5)', // Đây là background mờ
+    // },
+    // temperatureUnitText: {
+    //     color: '#000',
+    //     fontSize: 20,
+    //     marginLeft: 'auto',
+    //     marginRight: 30,
+    //     marginTop: 14
+    // },
+    // selected: {
+    //     marginLeft: 'auto',
+    //     marginRight: 30,
+    //     marginTop: 14,
+    //     fontSize: 20,
+    //     fontWeight: 'bold',
+    //     color: 'blue', // Ví dụ: đổi màu và định dạng cho text được chọn
+    // },
+    temperatureUnitContainer: {
         position: 'absolute',
         top: 170,
         left: 15,
         width: 120,
-        height: 100,
+        height: 110,
         backgroundColor: 'white',
         borderRadius: 20,
-        // padding: 20,
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
@@ -25,26 +63,39 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
     },
-    modalOverlay: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Đây là background mờ
+    windSpeedUnitContainer: {
+        position: 'absolute',
+        top: 190,
+        right: 15,
+        width: 300,
+        height: 150,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
     },
-    temperatureUnitText: {
-        color: '#000',
-        fontSize: 20,
-        marginLeft: 'auto',
-        marginRight: 30,
-        marginTop: 14
-    },
-    selected: {
-        marginLeft: 'auto',
-        marginRight: 30,
-        marginTop: 14,
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: 'blue', // Ví dụ: đổi màu và định dạng cho text được chọn
+    atmosphericPressureUnitContainer: {
+        position: 'absolute',
+        top: 190,
+        right: 15,
+        width: 300,
+        height: 230,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
     },
     header: {
         paddingBottom: 20,
