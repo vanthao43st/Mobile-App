@@ -7,7 +7,7 @@ import Card from '../Card';
 import cityList from '../../api/vn.json'
 import Geolocation from '@react-native-community/geolocation';
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { WEATHER_API_KEY, HERE_API, weather_baseURL } from '../../api/Constants'
+import { WEATHER_API_KEY, HERE_API, weather_baseURL, HERE_baseURL } from '../../api/Constants'
 import { useWeather } from '../../hooks/useTemperature'
 
 const DismissKeyboard = ({ children }) => (
@@ -87,27 +87,34 @@ const Home = (props) => {
             const savedCurrentWeatherData = await AsyncStorage.getItem(`WEATHER_DATA_${currentPosition.lat}_${currentPosition.lon}`);
             const savedCurrentCityData = await AsyncStorage.getItem(`CURRENT_CITY_DATA_${currentPosition.lat}_${currentPosition.lon}`);
 
-            console.log(savedCurrentCityData)
-            // console.log(savedCurrentWeatherData)
+            // console.log(savedCurrentCityData)
+
+
+            // console.log(savedCurrentWeatherData != null && savedCurrentCityData != null)
 
             if (savedCurrentWeatherData && savedCurrentCityData) {
+                const now = new Date().getTime()
                 const item = JSON.parse(savedCurrentWeatherData)
-                console(item.time)
-                if (now - item.time < 900 * 1000) {
-                    console.log(1111111111111)
+                const currentCity = JSON.parse(savedCurrentCityData)
+
+                // console.log(now)
+                // console.log(item.time)
+
+                if (now - item.time < 1800 * 1000) {
+                    // console.log(1111111111111)
                     setCurrentWeatherData(item.data);
-                    setCurrentCity(savedCurrentCityData)
+                    setCurrentCity(currentCity)
                 } else {
-                    console.log(22222222222222)
+                    // console.log(22222222222222)
                     await AsyncStorage.removeItem(`WEATHER_DATA_${currentPosition.lat}_${currentPosition.lon}`);
                     await AsyncStorage.removeItem(`CURRENT_CITY_DATA_${currentPosition.lat}_${currentPosition.lon}`)
                     fetchData()
                 }
             } else {
-                console.log(33333333)
                 const currentWeatherUrl = `${weather_baseURL}/current.json?key=${WEATHER_API_KEY}&q=${currentPosition.lat},${currentPosition.lon}&aqi=no`
-                const currentCityUrl = `https://revgeocode.search.hereapi.com/v1/revgeocode?at=${currentPosition.lat},${currentPosition.lon}&lang=vi-VI&apiKey=${HERE_API}`
+                const currentCityUrl = `${HERE_baseURL}/revgeocode?at=${currentPosition.lat},${currentPosition.lon}&apiKey=${HERE_API}`
 
+                // console.log(currentCityUrl)
                 const [currentWeatherResponse, currentCityResponse] = await Promise.all(
                     [
                         fetch(currentWeatherUrl),
@@ -115,6 +122,7 @@ const Home = (props) => {
                     ]
                 )
 
+                console.log(333)
                 const currentWeatherData = await currentWeatherResponse.json();
                 const currentCityData = await currentCityResponse.json()
 
@@ -226,18 +234,18 @@ const Home = (props) => {
                                             <View style={styles.setting}>
                                                 <TouchableOpacity
                                                     onPress={() => {
-                                                        setVisible(false)
-                                                    }}
-                                                >
-                                                    <Text style={styles.settingText}>Chia sẻ</Text>
-                                                </TouchableOpacity>
-                                                <TouchableOpacity
-                                                    onPress={() => {
                                                         props.navigation.navigate('Setting', { flag: flag })
                                                         setVisible(false)
                                                     }}
                                                 >
-                                                    <Text style={styles.settingText}>Cài đặt</Text>
+                                                    <Text style={styles.settingText}>Setting</Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        setVisible(false)
+                                                    }}
+                                                >
+                                                    <Text style={styles.settingText}>Share</Text>
                                                 </TouchableOpacity>
                                             </View>
                                         }
@@ -258,7 +266,7 @@ const Home = (props) => {
                                         :
                                         <Text style={styles.headerText}>Current Location</Text>
                                 }
-                                <TouchableOpacity onPress={() => { props.navigation.navigate('AddLocation') }}>
+                                <TouchableOpacity onPress={() => props.navigation.navigate('AddLocation', { flag: flag, city: currentCity, lat: currentPosition.lat, lon: currentPosition.lon })}>
                                     <AntDesign name="plus" size={20} style={styles.icon} />
                                 </TouchableOpacity>
                             </View>

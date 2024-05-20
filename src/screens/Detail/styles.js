@@ -6,10 +6,10 @@ const styles = StyleSheet.create({
     setting: {
         position: 'absolute',
         top: 18,
-        right: 15,
+        right: 20,
         zIndex: 9999,
-        width: 140,
-        height: 100,
+        width: 150,
+        height: 135,
         backgroundColor: '#fff',
         borderRadius: 15,
     },
@@ -18,6 +18,47 @@ const styles = StyleSheet.create({
         fontSize: 20,
         marginLeft: 20,
         marginTop: 14
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Đây là background mờ
+    },
+    addLocationContainer: {
+        position: 'absolute',
+        top: 300,
+        left: 15,
+        width: 380,
+        height: 160,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    addLocationQuestion: {
+        color: '#000',
+        fontSize: 20,
+        marginTop: 20,
+        alignSelf: 'center',
+        fontWeight: 'bold'
+    },
+    optional: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginHorizontal: 50,
+        marginTop: 30,
+    },
+    addLocationText: {
+        fontSize: 20,
+        color: '#333',
+        fontWeight: 'bold',
     },
     error: {
         width: deviceWidth,

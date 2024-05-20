@@ -52,74 +52,80 @@ const Detail = (props) => {
     }, [lat]); // Dependency array rỗng để chạy một lần
 
     const fetchData = async (isMounted) => {
-        if (!isMounted) return;
+        if (!isMounted) return; // Kiểm tra biến cờ trước khi tiếp tục
 
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-
+        const today = new Date()
+        const yesterday = new Date(today)
+        const tomorrow = new Date(today)
+        yesterday.setDate(yesterday.getDate() + -1)
+        tomorrow.setDate(tomorrow.getDate() + 1)
         const formatDate = (date) => {
             const year = date.getFullYear();
-            const month = (`0${date.getMonth() + 1}`).slice(-2);
-            const day = (`0${date.getDate()}`).slice(-2);
+            const month = (`0${date.getMonth() + 1}`).slice(-2); // Đảm bảo định dạng hai chữ số
+            const day = (`0${date.getDate()}`).slice(-2); // Đảm bảo định dạng hai chữ số
             return `${year}-${month}-${day}`;
         };
 
-        const fetchWeatherData = async () => {
-            const weatherUrl = `${weather_baseURL}/current.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&aqi=yes`;
-            const airQualityUrl = `${openweather_baseURL}/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}`;
-            const historyUrl = `${weather_baseURL}/history.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&dt=${formatDate(yesterday)}`;
-            const forecastUrl = `${weather_baseURL}/forecast.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&days=3&aqi=no&alerts=no`;
 
-            const [weatherResponse, airQualityResponse, historyResponse, forecastResponse] = await Promise.all([
-                fetch(weatherUrl),
-                fetch(airQualityUrl),
-                fetch(historyUrl),
-                fetch(forecastUrl)
-            ]);
-
-            const weatherData = await weatherResponse.json();
-            const airQualityData = await airQualityResponse.json();
-            const historyData = await historyResponse.json();
-            const forecastData = await forecastResponse.json();
-
-            return { weatherData, airQualityData, historyData, forecastData };
-        };
-
-        const saveDataToStorage = async (lat, lon, weatherData, airQualityData, forecastData, multiDayWeatherData, combinedHoursData) => {
-            const timestamp = new Date().getTime();
-            await AsyncStorage.setItem(`WEATHER_DATA_${lat}_${lon}`, JSON.stringify({ time: timestamp, data: weatherData }));
-            await AsyncStorage.setItem(`AIR_QUALITY_DATA_${lat}_${lon}`, JSON.stringify(airQualityData.list));
-            await AsyncStorage.setItem(`FORECAST_DATA_${lat}_${lon}`, JSON.stringify(forecastData.forecast.forecastday[0]));
-            await AsyncStorage.setItem(`MULTIDAY_WEATHER_DATA_${lat}_${lon}`, JSON.stringify(multiDayWeatherData));
-            await AsyncStorage.setItem(`TODAY_DATA_${lat}_${lon}`, JSON.stringify(combinedHoursData));
-        };
-
+        // setIsLoading(true);
         try {
             const savedWeatherData = await AsyncStorage.getItem(`WEATHER_DATA_${lat}_${lon}`);
             const savedAirQualityData = await AsyncStorage.getItem(`AIR_QUALITY_DATA_${lat}_${lon}`);
-            const saveForecastData = await AsyncStorage.getItem(`FORECAST_DATA_${lat}_${lon}`);
-            const savedMultiDayWeatherData = await AsyncStorage.getItem(`MULTIDAY_WEATHER_DATA_${lat}_${lon}`);
-            const saveTodayData = await AsyncStorage.getItem(`TODAY_DATA_${lat}_${lon}`);
+            const saveForecastData = await AsyncStorage.getItem(`FORECAST_DATA_${lat}_${lon}`)
+            const savedMultiDayWeatherData = await AsyncStorage.getItem(`MULTIDAY_WEATHER_DATA_${lat}_${lon}`)
+            const saveTodayData = await AsyncStorage.getItem(`TODAY_DATA_${lat}_${lon}`)
+
+            console.log(1111)
 
             if (savedWeatherData && savedAirQualityData && saveForecastData && savedMultiDayWeatherData && saveTodayData) {
-                const item = JSON.parse(savedWeatherData);
+                const item = JSON.parse(savedWeatherData)
+                const now = new Date().getTime()
 
-                setWeatherData(item.data);
-                setAirQualityData(JSON.parse(savedAirQualityData));
-                setWeatherForcastData(JSON.parse(saveForecastData));
-                setMultiDayWeatherData(JSON.parse(savedMultiDayWeatherData));
-                setTodayData(JSON.parse(saveTodayData));
+                console.log(2222)
+
+                // console.log('hellooooooooo')
+                if (now - item.time < 1800 * 1000) {
+                    console.log(3333)
+                    setWeatherData(item.data);
+                    setAirQualityData(JSON.parse(savedAirQualityData));
+                    setWeatherForcastData(JSON.parse(saveForecastData))
+                    setMultiDayWeatherData(JSON.parse(savedMultiDayWeatherData))
+                    setTodayData(JSON.parse(saveTodayData))
+                } else {
+                    console.log(4444)
+                    await AsyncStorage.removeItem(`WEATHER_DATA_${lat}_${lon}`);
+                    await AsyncStorage.removeItem(`AIR_QUALITY_DATA_${lat}_${lon}`);
+                    await AsyncStorage.removeItem(`FORECAST_DATA_${lat}_${lon}`);
+                    await AsyncStorage.removeItem(`MULTIDAY_WEATHER_DATA_${lat}_${lon}`);
+                    await AsyncStorage.removeItem(`TODAY_DATA_${lat}_${lon}`)
+                    if (isMounted) await fetchData(isMounted); // Gọi lại fetchData với biến cờ
+                }
             } else {
                 setIsLoading(true);
+                const weatherUrl = `${weather_baseURL}/current.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&aqi=yes`
+                const airQualityUrl = `${openweather_baseURL}/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}`
+                const historyUrl = `${weather_baseURL}/history.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&dt=${formatDate(yesterday)}`;
+                const forecastUrl = `${weather_baseURL}/forecast.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&days=3&aqi=no&alerts=no`;
 
-                const { weatherData, airQualityData, historyData, forecastData } = await fetchWeatherData();
+                const [weatherResponse, airQualityResponse, historyResponse, forecastResponse] = await Promise.all(
+                    [
+                        fetch(weatherUrl),
+                        fetch(airQualityUrl),
+                        fetch(historyUrl),
+                        fetch(forecastUrl)
+                    ]
+                )
 
+                const weatherData = await weatherResponse.json();
+                const airQualityData = await airQualityResponse.json();
+                const historyData = await historyResponse.json();
+                const forecastData = await forecastResponse.json();
+
+                console.log(5555555)
                 setWeatherData(weatherData);
                 setAirQualityData(airQualityData.list);
-                setWeatherForcastData(forecastData.forecast.forecastday[0]);
-
-                const multiDayWeatherData = {
+                setWeatherForcastData(forecastData.forecast.forecastday[0])
+                setMultiDayWeatherData({
                     yesterday_minc: historyData.forecast.forecastday[0].day.mintemp_c,
                     yesterday_maxc: historyData.forecast.forecastday[0].day.maxtemp_c,
                     yesterday_minf: historyData.forecast.forecastday[0].day.mintemp_f,
@@ -127,28 +133,30 @@ const Detail = (props) => {
                     today_minc: forecastData.forecast.forecastday[0].day.mintemp_c,
                     today_maxc: forecastData.forecast.forecastday[0].day.maxtemp_c,
                     today_minf: forecastData.forecast.forecastday[0].day.mintemp_f,
-                    today_maxf: forecastData.forecast.forecastday[0].day.mintemp_f,
+                    today_maxf: forecastData.forecast.forecastday[0].day.maxtemp_f,
                     tomorrow_minc: forecastData.forecast.forecastday[1].day.mintemp_c,
                     tomorrow_maxc: forecastData.forecast.forecastday[1].day.maxtemp_c,
                     tomorrow_minf: forecastData.forecast.forecastday[1].day.mintemp_f,
-                    tomorrow_maxf: forecastData.forecast.forecastday[1].day.mintemp_f,
+                    tomorrow_maxf: forecastData.forecast.forecastday[1].day.maxtemp_f,
+
                     yesterdayIcon: historyData.forecast.forecastday[0].day.condition.icon,
                     todayIcon: forecastData.forecast.forecastday[0].day.condition.icon,
                     tomorrowIcon: forecastData.forecast.forecastday[1].day.condition.icon
-                };
+                });
 
-                setMultiDayWeatherData(multiDayWeatherData);
+                // console.log(lat + ',' + lon)
 
-                const nextFullHour = currentHour;
-                const hoursToDisplay = 13;
-                const filteredHours = forecastData.forecast.forecastday[0].hour.filter(hour => {
+
+                const nextFullHour = currentHour; // Tìm giờ tiếp theo mà không có phút hoặc giây
+                const hoursToDisplay = 13; // Số lượng giờ để hiển thị từ giờ tiếp theo
+                const filteredHours = forecastData?.forecast?.forecastday?.[0]?.hour?.filter(hour => {
                     const hourTime = new Date(hour.time).getHours();
                     return hourTime >= nextFullHour && hourTime < nextFullHour + hoursToDisplay;
                 });
 
                 let combinedHoursData = [...filteredHours];
-                const remainTime = 24 - currentHour;
-                const timeNeedNextDay = hoursToDisplay - remainTime + 1;
+                const remainTime = 24 - currentHour
+                const timeNeedNextDay = hoursToDisplay - remainTime + 1
 
                 if (timeNeedNextDay > 0) {
                     const tomorrow = new Date(today);
@@ -162,20 +170,48 @@ const Detail = (props) => {
                     combinedHoursData = combinedHoursData.concat(hoursDataTomorrow);
                 }
 
-                setTodayData(combinedHoursData);
+                // console.log(filteredHours[0].time)
+                setTodayData(combinedHoursData)
 
-                await saveDataToStorage(lat, lon, weatherData, airQualityData, forecastData, multiDayWeatherData, combinedHoursData);
+                // console.log(filteredHours)
+
+
+                // Lưu vào AsyncStorage
+                await AsyncStorage.setItem(`WEATHER_DATA_${lat}_${lon}`, JSON.stringify({
+                    time: new Date().getTime(),
+                    data: weatherData
+                }));
+                await AsyncStorage.setItem(`AIR_QUALITY_DATA_${lat}_${lon}`, JSON.stringify(airQualityData.list))
+                await AsyncStorage.setItem(`FORECAST_DATA_${lat}_${lon}`, JSON.stringify(forecastData.forecast.forecastday[0]))
+                await AsyncStorage.setItem(`MULTIDAY_WEATHER_DATA_${lat}_${lon}`, JSON.stringify({
+                    yesterday_minc: historyData.forecast.forecastday[0].day.mintemp_c,
+                    yesterday_maxc: historyData.forecast.forecastday[0].day.maxtemp_c,
+                    yesterday_minf: historyData.forecast.forecastday[0].day.mintemp_f,
+                    yesterday_maxf: historyData.forecast.forecastday[0].day.maxtemp_f,
+                    today_minc: forecastData.forecast.forecastday[0].day.mintemp_c,
+                    today_maxc: forecastData.forecast.forecastday[0].day.maxtemp_c,
+                    today_minf: forecastData.forecast.forecastday[0].day.mintemp_f,
+                    today_maxf: forecastData.forecast.forecastday[0].day.maxtemp_f,
+                    tomorrow_minc: forecastData.forecast.forecastday[1].day.mintemp_c,
+                    tomorrow_maxc: forecastData.forecast.forecastday[1].day.maxtemp_c,
+                    tomorrow_minf: forecastData.forecast.forecastday[1].day.mintemp_f,
+                    tomorrow_maxf: forecastData.forecast.forecastday[1].day.maxtemp_f,
+
+                    yesterdayIcon: historyData.forecast.forecastday[0].day.condition.icon,
+                    todayIcon: forecastData.forecast.forecastday[0].day.condition.icon,
+                    tomorrowIcon: forecastData.forecast.forecastday[1].day.condition.icon
+                }))
+                await AsyncStorage.setItem(`TODAY_DATA_${lat}_${lon}`, JSON.stringify(combinedHoursData))
             }
+
         } catch (error) {
-            setError('Có lỗi xảy ra khi gọi API thời tiết');
+            setError('Có lỗi xảy ra khi gọi API thời tiết')
             console.error(error);
         } finally {
-            if (isMounted) setIsLoading(false);
+            // setIsLoading(false)
+            if (isMounted) setIsLoading(false); // Kiểm tra biến cờ trước khi cập nhật state
         }
-
-        setTimeout(() => fetchData(isMounted), 1800 * 1000); // Cập nhật dữ liệu sau mỗi 30 phút
-    };
-
+    }
 
     if (isLoading) {
         return <ActivityIndicator size="large" style={{ justifyContent: 'center', width: deviceWidth, height: deviceHeight }} />;
