@@ -137,6 +137,28 @@ const styles = StyleSheet.create({
     icon: {
         color: '#8f8f90',
         marginLeft: 10
+    },
+    switchEnLocation: {
+        marginTop: 25,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginRight: 40
+    },
+    switchEnLocationLabel: {
+        color: COLORS.primary,
+        fontSize: 20
+    },
+    // switchContainer: {
+    //     width: 60, // Adjust the width as needed
+    //     height: 34, // Adjust the height as needed
+    //     justifyContent: 'center',
+    //     alignItems: 'center',
+    // },
+    switchLocation: {
+        transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }],
+        // width: 50,
+        // height: 23
     }
 })
 

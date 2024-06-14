@@ -5,13 +5,20 @@ import styles from './styles'
 import Panel from '../Panel'
 
 const AirQualityList = (props) => {
-    const { airQualityData, city } = props.route.params;
-    const first24Items = airQualityData.slice(0, 28)
+    const { airQualityData, city, lat, lon } = props.route.params;
+    // const first24Items = airQualityData.forecast.forecastday[0].hour.slice(11, 25)
+    // console.log(airQualityData.forecast)
+
+    const renderItem = ({ item }) => (
+        <View style={{ marginBottom: 10 }}>
+            <Panel data={item} />
+        </View>
+    )
 
     return (
         <View>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => { props.navigation.navigate('AirQualityDetail', { city, airQualityData }) }} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+                <TouchableOpacity onPress={() => { props.navigation.navigate('AirQualityDetail', { city, airQualityData, lat, lon }) }} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
                     <IonIcon name="arrow-back-sharp" style={styles.headerIcon} />
                     <Text style={styles.headerIconText}>Back</Text>
                 </TouchableOpacity>
@@ -20,16 +27,12 @@ const AirQualityList = (props) => {
             </View>
             <View>
                 <FlatList
-                    data={first24Items}
-                    renderItem={({ item }) => (
-                        <View style={{ marginBottom: 10 }}>
-                            <Panel data={item} />
-                        </View>
-                    )}
-                    contentContainerStyle={{ paddingBottom: 30 }}
+                    data={airQualityData.forecast}
+                    renderItem={renderItem}
+                    keyExtractor={item => item.time}
+                    contentContainerS tyle={{ paddingBottom: 30 }}
                     initialNumToRender={5} // giới hạn số lượng phần tử hiển thị từ đầu
                     maxToRenderPerBatch={5} // giới hạn số lượng phần tử hiển thị trong mỗi lần cuộn
-
                 />
             </View>
         </View>

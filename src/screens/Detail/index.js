@@ -3,18 +3,21 @@ import React, { useEffect, useState } from 'react'
 import WeatherIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import styles from './styles';
-import { OPENWEATHER_API_KEY, WEATHER_API_KEY, openweather_baseURL, weather_baseURL } from '../../api/Constants';
+import { WEATHER_API_KEY, weather_baseURL } from '../../api/Constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { deviceHeight, deviceWidth } from '../../components/Dimension';
 import { useWeather } from '../../hooks/useTemperature';
-
-// const WEATHER_STORAGE_KEY = 'WEATHER_DATA';
-// const AIR_QUALITY_STORAGE_KEY = 'AIR_QUALITY_DATA';
-// const MULTIDAY_WEATHER_STORAGE_KEY = 'MULTIDAY_WEATHER_DATA'
+import { getAQIForAllPollutants, getOverallAQI } from '../../utils/AQI_Index';
+import backgroundRain from '../../assets/img/background_rain.png';
+import backgroundStorm from '../../assets/img/background_storm.jpg';
+import backgroundThunder from '../../assets/img/background_thunder.jpg';
 
 const Detail = (props) => {
     const [weatherData, setWeatherData] = useState(null)
-    const [airQualityData, setAirQualityData] = useState(null)
+    const [airQualityData, setAirQualityData] = useState({
+        current: '',
+        forecast: ''
+    })
     const [multiDayWeatherData, setMultiDayWeatherData] = useState({
         yesterday_minc: '',
         yesterday_maxc: '',
@@ -39,7 +42,7 @@ const Detail = (props) => {
     const { temperatureUnit, windSpeedUnit, atmosphericPressureUnit } = useWeather()
     const [flag] = useState('Detail')
     const [visible, setVisible] = useState(false)
-    const [weatherForcastData, setWeatherForcastData] = useState()
+    const [weatherForecastData, setWeatherForecastData] = useState()
     const [addLocationVisible, setAddLocationVisible] = useState(false)
     const currentHour = new Date().getHours();
 
@@ -67,29 +70,31 @@ const Detail = (props) => {
 
         const fetchWeatherData = async () => {
             const weatherUrl = `${weather_baseURL}/current.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&aqi=yes`;
-            const airQualityUrl = `${openweather_baseURL}/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}`;
             const historyUrl = `${weather_baseURL}/history.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&dt=${formatDate(yesterday)}`;
-            const forecastUrl = `${weather_baseURL}/forecast.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&days=3&aqi=no&alerts=no`;
-
-            const [weatherResponse, airQualityResponse, historyResponse, forecastResponse] = await Promise.all([
+            const forecastUrl = `${weather_baseURL}/forecast.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&days=3&aqi=yes&alerts=no`;
+            const [weatherResponse, historyResponse, forecastResponse] = await Promise.all([
                 fetch(weatherUrl),
-                fetch(airQualityUrl),
                 fetch(historyUrl),
                 fetch(forecastUrl)
             ]);
 
             const weatherData = await weatherResponse.json();
-            const airQualityData = await airQualityResponse.json();
             const historyData = await historyResponse.json();
             const forecastData = await forecastResponse.json();
 
-            return { weatherData, airQualityData, historyData, forecastData };
+            return { weatherData, historyData, forecastData };
         };
 
-        const saveDataToStorage = async (lat, lon, weatherData, airQualityData, forecastData, multiDayWeatherData, combinedHoursData) => {
+        const saveDataToStorage = async (lat, lon, weatherData, forecastData, multiDayWeatherData, combinedHoursData) => {
             const timestamp = new Date().getTime();
-            await AsyncStorage.setItem(`WEATHER_DATA_${lat}_${lon}`, JSON.stringify({ time: timestamp, data: weatherData }));
-            await AsyncStorage.setItem(`AIR_QUALITY_DATA_${lat}_${lon}`, JSON.stringify(airQualityData.list));
+            await AsyncStorage.setItem(`WEATHER_DATA_${lat}_${lon}`, JSON.stringify({
+                time: timestamp,
+                data: weatherData
+            }));
+            await AsyncStorage.setItem(`AIR_QUALITY_DATA_${lat}_${lon}`, JSON.stringify({
+                current: forecastData.current,
+                forecast: combinedHoursData
+            }));
             await AsyncStorage.setItem(`FORECAST_DATA_${lat}_${lon}`, JSON.stringify(forecastData.forecast.forecastday[0]));
             await AsyncStorage.setItem(`MULTIDAY_WEATHER_DATA_${lat}_${lon}`, JSON.stringify(multiDayWeatherData));
             await AsyncStorage.setItem(`TODAY_DATA_${lat}_${lon}`, JSON.stringify(combinedHoursData));
@@ -107,17 +112,16 @@ const Detail = (props) => {
 
                 setWeatherData(item.data);
                 setAirQualityData(JSON.parse(savedAirQualityData));
-                setWeatherForcastData(JSON.parse(saveForecastData));
+                setWeatherForecastData(JSON.parse(saveForecastData));
                 setMultiDayWeatherData(JSON.parse(savedMultiDayWeatherData));
                 setTodayData(JSON.parse(saveTodayData));
             } else {
                 setIsLoading(true);
 
-                const { weatherData, airQualityData, historyData, forecastData } = await fetchWeatherData();
+                const { weatherData, historyData, forecastData } = await fetchWeatherData();
 
                 setWeatherData(weatherData);
-                setAirQualityData(airQualityData.list);
-                setWeatherForcastData(forecastData.forecast.forecastday[0]);
+                setWeatherForecastData(forecastData.forecast.forecastday[0]);
 
                 const multiDayWeatherData = {
                     yesterday_minc: historyData.forecast.forecastday[0].day.mintemp_c,
@@ -153,7 +157,7 @@ const Detail = (props) => {
                 if (timeNeedNextDay > 0) {
                     const tomorrow = new Date(today);
                     tomorrow.setDate(tomorrow.getDate() + 1);
-                    const forecastUrlTomorrow = `${weather_baseURL}/forecast.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&dt=${formatDate(tomorrow)}&days=1&aqi=no&alerts=no`;
+                    const forecastUrlTomorrow = `${weather_baseURL}/forecast.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&dt=${formatDate(tomorrow)}&days=1&aqi=yes&alerts=no`;
 
                     const responseTomorrow = await fetch(forecastUrlTomorrow);
                     const dataTomorrow = await responseTomorrow.json();
@@ -164,7 +168,12 @@ const Detail = (props) => {
 
                 setTodayData(combinedHoursData);
 
-                await saveDataToStorage(lat, lon, weatherData, airQualityData, forecastData, multiDayWeatherData, combinedHoursData);
+                setAirQualityData({
+                    current: forecastData.current,
+                    forecast: combinedHoursData
+                });
+
+                await saveDataToStorage(lat, lon, weatherData, forecastData, multiDayWeatherData, combinedHoursData);
             }
         } catch (error) {
             setError('Có lỗi xảy ra khi gọi API thời tiết');
@@ -273,9 +282,32 @@ const Detail = (props) => {
             break;
     }
 
+    const aqiValues = getAQIForAllPollutants(airQualityData.current.air_quality);
+    const overallAQI = getOverallAQI(aqiValues);
+
+
+    // Cập nhật phần sử dụng background trong hàm return của Home component
+    let backgroundImage = require('../../assets/img/background.png'); // Mặc định là background.png
+    let imageStyle = { opacity: 0.8, backgroundColor: '#000' }
+
+    if (weatherData) {
+        const conditionText = weatherData.current.condition.text.toLowerCase();
+
+        if (conditionText.includes('rain') && !conditionText.includes('heavy')) {
+            backgroundImage = backgroundRain;
+            imageStyle = { opacity: 0.8, backgroundColor: '#31618b' }
+        } else if (conditionText.includes('heavy rain')) {
+            backgroundImage = backgroundRain;
+        } else if (conditionText.includes('storm')) {
+            backgroundImage = backgroundStorm;
+        } else if (conditionText.includes('thunder')) {
+            backgroundImage = backgroundThunder;
+        }
+    }
+
     return (
         <View style={{ flex: 1, marginBottom: 20 }}>
-            <ImageBackground source={require('../../assets/img/background.png')} style={styles.backgroundImg} />
+            <ImageBackground source={backgroundImage} style={styles.backgroundImg} imageStyle={imageStyle} />
             <ScrollView style={{ flex: 1 }}>
 
                 {/* Modal to hide setting when clicking outside */}
@@ -406,7 +438,7 @@ const Detail = (props) => {
                                 <Text style={styles.airQualityText}>
                                     <WeatherIcon name="weather-cloudy" style={styles.airQualityIcon} />
                                     <Text> AQI </Text>
-                                    <Text>{airQualityData?.[0].components.pm2_5.toFixed(0)}</Text>
+                                    <Text>{overallAQI.toFixed(0)}</Text>
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -477,8 +509,8 @@ const Detail = (props) => {
 
                         <View style={styles.containerDtail}>
                             <View style={styles.detailItemSun}>
-                                <Text style={styles.detailItemText}>Sunrise {weatherForcastData.astro.sunrise}</Text>
-                                <Text style={styles.detailItemText}>Sunset {weatherForcastData.astro.sunset}</Text>
+                                <Text style={styles.detailItemText}>Sunrise {weatherForecastData.astro.sunrise}</Text>
+                                <Text style={styles.detailItemText}>Sunset {weatherForecastData.astro.sunset}</Text>
                             </View>
 
                             <View style={styles.detailItem}>
@@ -494,7 +526,7 @@ const Detail = (props) => {
                                     </View>
                                     <View style={styles.detailItemSpace}>
                                         <Text style={styles.detailItemText}>There may be rain</Text>
-                                        <Text style={styles.detailItemText}>{weatherForcastData.day.daily_chance_of_rain}%</Text>
+                                        <Text style={styles.detailItemText}>{weatherForecastData.day.daily_chance_of_rain}%</Text>
                                     </View>
                                     <View style={styles.detailItemSpace}>
                                         <Text style={styles.detailItemText}>Wind speed</Text>
@@ -519,12 +551,23 @@ const Detail = (props) => {
                             </View>
                         </View>
 
-                        <View style={styles.containerDtail}>
-
-                        </View>
+                        <TouchableOpacity
+                            onPress={() => props.navigation.navigate('AirQualityDetail', { airQualityData, city, lat, lon })}
+                            style={styles.buttonAirQuality}
+                        >
+                            <View>
+                                <Text style={styles.airQualityDetailText}>Air Quality Index</Text>
+                                <View style={styles.index}>
+                                    <WeatherIcon name='leaf' size={20} color='#fff' />
+                                    <Text style={styles.airQualityDetailText}>{overallAQI.toFixed(0)}</Text>
+                                </View>
+                            </View>
+                            <View style={styles.airQualityMoreDetail}>
+                                <Text style={styles.airQualityMoreDetailText}>More Detail</Text>
+                                <WeatherIcon name='arrow-right-circle' size={25} color='#fff' />
+                            </View>
+                        </TouchableOpacity>
                     </View>
-
-
                 </View>
             </ScrollView>
 

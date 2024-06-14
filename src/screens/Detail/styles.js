@@ -211,19 +211,46 @@ const styles = StyleSheet.create({
     containerDtail: {
         backgroundColor: 'rgba(158, 221, 248, 0.2)',
         marginTop: 50,
-        paddingTop: 15,
+        paddingVertical: 15,
         paddingHorizontal: 40,
         borderRadius: 20
+    },
+    buttonAirQuality: {
+        backgroundColor: 'rgba(158, 221, 248, 0.2)',
+        marginTop: 50,
+        paddingVertical: 10,
+        paddingHorizontal: 25,
+        borderRadius: 20,
+        flexDirection: 'row',
+        justifyContent: 'space-between'
+    },
+    index: {
+        marginTop: 5,
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    airQualityDetailText: {
+        color: '#fff',
+        fontSize: 20
+    },
+    airQualityMoreDetail: {
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    airQualityMoreDetailText: {
+        color: '#fff',
+        fontSize: 18,
+        marginRight: 5
     },
     detailItemSun: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        marginBottom: 20
+        marginBottom: 20,
+        marginTop: 10
     },
     detailItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 20
     },
     detailItemSpace: {
         marginBottom: 20

@@ -9,6 +9,9 @@ import Geolocation from '@react-native-community/geolocation';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { WEATHER_API_KEY, HERE_API, weather_baseURL, HERE_baseURL } from '../../api/Constants'
 import { useWeather } from '../../hooks/useTemperature'
+import backgroundRain from '../../assets/img/background_rain.png';
+import backgroundStorm from '../../assets/img/background_storm.jpg';
+import backgroundThunder from '../../assets/img/background_thunder.jpg';
 
 const DismissKeyboard = ({ children }) => (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -100,7 +103,7 @@ const Home = (props) => {
                 // console.log(now)
                 // console.log(item.time)
 
-                if (now - item.time < 1800 * 1000) {
+                if (now - item.time < 100 * 1000) {
                     // console.log(1111111111111)
                     setCurrentWeatherData(item.data);
                     setCurrentCity(currentCity)
@@ -178,11 +181,23 @@ const Home = (props) => {
         if (!val || val === '') {
             setCity([]);
         } else {
-            setCity(
-                cityList.filter((item) =>
-                    removeVietnameseTones(item.city).toLowerCase().includes(removeVietnameseTones(val).toLowerCase())
-                )
+            const filteredCities = cityList.filter((item) =>
+                removeVietnameseTones(item.city).toLowerCase().includes(removeVietnameseTones(val).toLowerCase())
             );
+            const sortedCities = filteredCities.sort((a, b) => {
+                const cityA = removeVietnameseTones(a.city).toLowerCase();
+                const cityB = removeVietnameseTones(b.city).toLowerCase();
+                const searchVal = removeVietnameseTones(val).toLowerCase();
+
+                if (cityA.startsWith(searchVal) && !cityB.startsWith(searchVal)) {
+                    return -1;
+                } else if (!cityA.startsWith(searchVal) && cityB.startsWith(searchVal)) {
+                    return 1;
+                } else {
+                    return cityA.localeCompare(cityB);
+                }
+            });
+            setCity(sortedCities);
         }
     };
 
@@ -211,11 +226,30 @@ const Home = (props) => {
         }
     }
 
+
+    let backgroundImage = require('../../assets/img/background.png'); // Mặc định là background.png
+    let imageStyle = { opacity: 0.8, backgroundColor: '#000' }
+
+    if (currentWeatherData) {
+        const conditionText = currentWeatherData.current.condition.text.toLowerCase();
+
+        if (conditionText.includes('rain') && !conditionText.includes('heavy')) {
+            backgroundImage = backgroundRain;
+            imageStyle = { opacity: 0.8, backgroundColor: '#31618b' }
+        } else if (conditionText.includes('heavy rain')) {
+            backgroundImage = backgroundRain;
+        } else if (conditionText.includes('storm')) {
+            backgroundImage = backgroundStorm;
+        } else if (conditionText.includes('thunder')) {
+            backgroundImage = backgroundThunder;
+        }
+    }
+
     return (
         //Hide Keyboard when click outside TextInput
         <DismissKeyboard>
             <View style={{ flex: 1 }}>
-                <ImageBackground source={require('../../assets/img/background.png')} style={styles.backgroundImg} imageStyle={{ opacity: 0.8, backgroundColor: '#000' }} />
+                <ImageBackground source={backgroundImage} style={styles.backgroundImg} imageStyle={imageStyle} />
                 <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
                     <View style={{ flex: 1 }}>
                         {/* Modal to hide setting when clicking outside */}

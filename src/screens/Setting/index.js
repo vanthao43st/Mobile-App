@@ -1,17 +1,56 @@
-import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, Switch, Alert, Linking } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import styles from './styles'
 import { useWeather } from '../../hooks/useTemperature'
 import CustomModal from '../../components/Modal'
+import Geolocation from '@react-native-community/geolocation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 
 const Setting = (props) => {
     const { flag, city, lat, lon } = props.route.params;
     const [visibleTemperature, setVisibleTemperature] = useState(false)
     const [visibleWindSpeed, setVisibleWindSpeed] = useState(false)
     const [visibleAtmosphericPressure, setVisibleAtmosphericPressure] = useState(false)
-
     const { temperatureUnit, setTemperatureUnit, windSpeedUnit, setWindSpeedUnit, atmosphericPressureUnit, setAtmosphericPressureUnit } = useWeather();
+    // const [isLocationEnabled, setIsLocationEnabled] = useState(false);
+
+    // useEffect(() => {
+    //     // Tải trạng thái ban đầu từ AsyncStorage
+    //     const loadLocationState = async () => {
+    //         const locationState = await AsyncStorage.getItem('locationEnabled');
+    //         if (locationState !== null) {
+    //             setIsLocationEnabled(JSON.parse(locationState));
+    //         }
+    //     };
+
+    //     loadLocationState();
+    // }, []);
+
+    // const toggleLocation = async (value) => {
+    //     if (value) {
+    //         // Yêu cầu quyền truy cập vị trí
+    //         request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION).then((result) => {
+    //             if (result === RESULTS.GRANTED) {
+    //                 Geolocation.getCurrentPosition(
+    //                     (position) => {
+    //                         setIsLocationEnabled(true);
+    //                         AsyncStorage.setItem('locationEnabled', JSON.stringify(true));
+    //                     },
+    //                     (error) => {
+    //                         Alert.alert("Error", "Unable to access location.");
+    //                     }
+    //                 );
+    //             } else {
+    //                 Alert.alert("Permission Denied", "Location permission is required to enable tracking.");
+    //             }
+    //         });
+    //     } else {
+    //         setIsLocationEnabled(false);
+    //         AsyncStorage.setItem('locationEnabled', JSON.stringify(false));
+    //     }
+    // };
 
     return (
         <View style={styles.container}>
@@ -137,6 +176,20 @@ const Setting = (props) => {
                 </TouchableOpacity>
 
             </View>
+
+
+
+            {/* <View style={styles.switchEnLocation}>
+                <View style={styles.columnTitle}>
+                    <Text style={styles.switchEnLocationLabel}>Location Tracking</Text>
+                </View>
+                <Switch
+                    value={isLocationEnabled}
+                    onValueChange={toggleLocation}
+                    style={styles.switchLocation}
+                />
+            </View> */}
+
         </View >
     )
 }

@@ -36,12 +36,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     detailNumber: {
-        color: '#ff7150',
+        // color: '#ff7150',
         fontWeight: '500',
         fontSize: 50,
     },
     detailText: {
-        color: '#ff7150',
+        // color: '#ff7150',
         fontSize: 20,
         marginLeft: 20,
         lineHeight: 90,
@@ -68,11 +68,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     prominentIndex: {
-        color: '#ff7150',
+        // color: '#ff7150',
         fontSize: 18,
     },
     index: {
-        color: '#2fa183',
+        // color: '#2fa183',
         fontSize: 18,
     },
     line: {

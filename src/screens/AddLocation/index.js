@@ -59,6 +59,12 @@ const Location = (props) => {
         });
     }, []);
 
+    useEffect(() => {
+        if (flag === 'AddLocationSearch' && city && lat && lon) {
+            handleAddCity(city, lat, lon);
+        }
+    }, [flag, city, lat, lon]);
+
     useFocusEffect(
         useCallback(() => {
             const intervalId = setInterval(async () => {
@@ -197,10 +203,11 @@ const Location = (props) => {
                             </View>
                         ) : (
                             <TouchableOpacity onPress={() => {
-                                if (flag === 'Home')
-                                    props.navigation.navigate('Home')
-                                else if (flag === 'Detail')
-                                    props.navigation.navigate('Detail', { city, lat, lon })
+                                // if (flag === 'Home')
+                                //     props.navigation.navigate('Home')
+                                // else if (flag === 'Detail')
+                                //     props.navigation.navigate('Detail', { city, lat, lon })
+                                props.navigation.goBack()
                             }} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
                                 <IonIcon name="arrow-back-sharp" style={styles.backIcon} />
                                 <Text style={styles.backIcon}>Back</Text>
@@ -208,17 +215,19 @@ const Location = (props) => {
                         )}
                     </View>
                     <Text style={styles.title}>City Management</Text>
-                    <View style={styles.formInput}>
-                        <TouchableOpacity>
+                    <TouchableOpacity onPress={() => props.navigation.navigate('AddLocationSearch')}>
+                        <View style={styles.formInput}>
                             <IonIcon name='search' size={22} style={styles.searchIcon} />
-                        </TouchableOpacity>
-                        <TextInput
-                            value={citySearch}
-                            placeholder='Type the city name'
-                            onChangeText={(val) => setCitySearch(val)}
-                            style={styles.textInput}
-                        />
-                    </View>
+                            <TextInput
+                                value={citySearch}
+                                placeholder='Type the city name'
+                                onChangeText={(val) => setCitySearch(val)}
+                                style={styles.textInput}
+                                editable={false} // không cho phép chỉnh sửa
+                                pointerEvents="none" // không cho phép tương tác
+                            />
+                        </View>
+                    </TouchableOpacity>
                     <View>
                         <View>
                             <FlatList

@@ -10,6 +10,7 @@ import Location from './src/screens/AddLocation';
 import SettingWithTemperature from './src/components/SettingWithTemperature';
 import { WeatherProvider } from './src/hooks/useTemperature';
 import Setting from './src/screens/Setting';
+import AddLocationSearch from './src/screens/AddLocationSearch';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +25,7 @@ const App = () => {
           <Stack.Screen name='AirQualityDetail' component={AirQualityDetail} />
           <Stack.Screen name='AirQualityList' component={AirQualityList} />
           <Stack.Screen name='Setting' component={Setting} />
+          <Stack.Screen name='AddLocationSearch' component={AddLocationSearch}/>
         </Stack.Navigator>
       </NavigationContainer>
     </WeatherProvider>
