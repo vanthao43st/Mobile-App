@@ -5,9 +5,13 @@ import styles from './styles'
 import Panel from '../Panel'
 
 const AirQualityList = (props) => {
-    const { airQualityData, city, lat, lon } = props.route.params;
+    const { airQualityData, city, lat, lon, airQualityHourlyData } = props.route.params;
     // const first24Items = airQualityData.forecast.forecastday[0].hour.slice(11, 25)
     // console.log(airQualityData.forecast)
+
+    const airQualityHourlyDataList = airQualityHourlyData.list.slice(0, 16)
+
+
 
     const renderItem = ({ item }) => (
         <View style={{ marginBottom: 10 }}>
@@ -18,7 +22,7 @@ const AirQualityList = (props) => {
     return (
         <View>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => { props.navigation.navigate('AirQualityDetail', { city, airQualityData, lat, lon }) }} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+                <TouchableOpacity onPress={() => { props.navigation.navigate('AirQualityDetail', { city, airQualityData, lat, lon, airQualityHourlyData }) }} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
                     <IonIcon name="arrow-back-sharp" style={styles.headerIcon} />
                     <Text style={styles.headerIconText}>Back</Text>
                 </TouchableOpacity>
@@ -27,12 +31,13 @@ const AirQualityList = (props) => {
             </View>
             <View>
                 <FlatList
-                    data={airQualityData.forecast}
+                    data={airQualityHourlyDataList}
                     renderItem={renderItem}
                     keyExtractor={item => item.time}
                     contentContainerS tyle={{ paddingBottom: 30 }}
                     initialNumToRender={5} // giới hạn số lượng phần tử hiển thị từ đầu
                     maxToRenderPerBatch={5} // giới hạn số lượng phần tử hiển thị trong mỗi lần cuộn
+                    marginBottom={40}
                 />
             </View>
         </View>

@@ -8,8 +8,12 @@ import { getAQIForAllPollutants, getAQILevel, getOverallAQI } from '../../utils/
 const Panel = (props) => {
     const { data } = props
 
-    const [date] = useState(new Date(data.time_epoch * 1000).toLocaleDateString('en-GB'))
-    const [time] = useState(new Date(data.time_epoch * 1000).toLocaleTimeString('en-GB'))
+    // console.log(data.air_quality)
+
+    // console.log(data.air_quality)
+
+    const [date] = useState(new Date(data.dt * 1000).toLocaleDateString('en-GB'))
+    const [time] = useState(new Date(data.dt * 1000).toLocaleTimeString('en-GB'))
     const [collapse, setCollapse] = useState(false)
 
     // useEffect(() => {
@@ -28,7 +32,7 @@ const Panel = (props) => {
     //     }
     // }, [data])
 
-    const aqiValues = getAQIForAllPollutants(data.air_quality);
+    const aqiValues = getAQIForAllPollutants(data.components);
     const overallAQI = getOverallAQI(aqiValues);
     // const aqiColor = getAQIColor(overallAQI);
     const aqiLevel = getAQILevel(overallAQI);
@@ -59,7 +63,7 @@ const Panel = (props) => {
                     <View style={styles.row}>
                         <View><Text style={styles.title}>CO</Text></View>
                         <View style={styles.txRow}>
-                            <Text style={styles.subTitle}>{data.air_quality.co}</Text>
+                            <Text style={styles.subTitle}>{data.components.co}</Text>
                             <Text style={styles.subTitle}>{' '}μg/m</Text>
                             <Text style={styles.subTitleSub}>3</Text>
                         </View>
@@ -69,7 +73,7 @@ const Panel = (props) => {
                     {/* <View style={styles.row}>
                         <View><Text style={styles.title}>NO</Text></View>
                         <View style={styles.txRow}>
-                            <Text style={styles.subTitle}>{data.air_quality.no}</Text>
+                            <Text style={styles.subTitle}>{data.components.no}</Text>
                             <Text style={styles.subTitle}>{' '}μg/m</Text>
                             <Text style={styles.subTitleSub}>3</Text>
                         </View>
@@ -79,7 +83,7 @@ const Panel = (props) => {
                     <View style={styles.row}>
                         <View><Text style={styles.title}>NO2</Text></View>
                         <View style={styles.txRow}>
-                            <Text style={styles.subTitle}>{data.air_quality.no2}</Text>
+                            <Text style={styles.subTitle}>{data.components.no2}</Text>
                             <Text style={styles.subTitle}>{' '}μg/m</Text>
                             <Text style={styles.subTitleSub}>3</Text>
                         </View>
@@ -89,7 +93,7 @@ const Panel = (props) => {
                     <View style={styles.row}>
                         <View><Text style={styles.title}>O3</Text></View>
                         <View style={styles.txRow}>
-                            <Text style={styles.subTitle}>{data.air_quality.o3}</Text>
+                            <Text style={styles.subTitle}>{data.components.o3}</Text>
                             <Text style={styles.subTitle}>{' '}μg/m</Text>
                             <Text style={styles.subTitleSub}>3</Text>
                         </View>
@@ -99,7 +103,7 @@ const Panel = (props) => {
                     <View style={styles.row}>
                         <View><Text style={styles.title}>SO2</Text></View>
                         <View style={styles.txRow}>
-                            <Text style={styles.subTitle}>{data.air_quality.so2}</Text>
+                            <Text style={styles.subTitle}>{data.components.so2}</Text>
                             <Text style={styles.subTitle}>{' '}μg/m</Text>
                             <Text style={styles.subTitleSub}>3</Text>
                         </View>
@@ -109,7 +113,7 @@ const Panel = (props) => {
                     <View style={styles.row}>
                         <View><Text style={styles.title}>PM2_5</Text></View>
                         <View style={styles.txRow}>
-                            <Text style={styles.subTitle}>{data.air_quality.pm2_5}</Text>
+                            <Text style={styles.subTitle}>{data.components.pm2_5}</Text>
                             <Text style={styles.subTitle}>{' '}μg/m</Text>
                             <Text style={styles.subTitleSub}>3</Text>
                         </View>
@@ -119,7 +123,7 @@ const Panel = (props) => {
                     <View style={styles.row}>
                         <View><Text style={styles.title}>PM10</Text></View>
                         <View style={styles.txRow}>
-                            <Text style={styles.subTitle}>{data.air_quality.pm10}</Text>
+                            <Text style={styles.subTitle}>{data.components.pm10}</Text>
                             <Text style={styles.subTitle}>{' '}μg/m</Text>
                             <Text style={styles.subTitleSub}>3</Text>
                         </View>

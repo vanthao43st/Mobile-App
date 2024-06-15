@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import WeatherIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import styles from './styles';
-import { WEATHER_API_KEY, weather_baseURL } from '../../api/Constants';
+import { OPENWEATHER_API_KEY, WEATHER_API_KEY, openweather_baseURL, weather_baseURL } from '../../api/Constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { deviceHeight, deviceWidth } from '../../components/Dimension';
 import { useWeather } from '../../hooks/useTemperature';
@@ -11,6 +11,7 @@ import { getAQIForAllPollutants, getOverallAQI } from '../../utils/AQI_Index';
 import backgroundRain from '../../assets/img/background_rain.png';
 import backgroundStorm from '../../assets/img/background_storm.jpg';
 import backgroundThunder from '../../assets/img/background_thunder.jpg';
+// import MapView, { UrlTile } from 'react-native-maps';
 
 const Detail = (props) => {
     const [weatherData, setWeatherData] = useState(null)
@@ -44,13 +45,22 @@ const Detail = (props) => {
     const [visible, setVisible] = useState(false)
     const [weatherForecastData, setWeatherForecastData] = useState()
     const [addLocationVisible, setAddLocationVisible] = useState(false)
+    const [airQualityHourlyData, setAirQualityHourlyData] = useState()
     const currentHour = new Date().getHours();
 
     useEffect(() => {
         let isMounted = true; // Thêm biến cờ để kiểm soát vòng đời component
         fetchData(isMounted);
+
+        const intervalId = setInterval(() => {
+            if (isMounted) {
+                fetchData(isMounted);
+            }
+        }, 1800 * 1000);
+
         return () => {
             isMounted = false; // Cleanup
+            clearInterval(intervalId); // Clear interval khi component bị hủy
         };
     }, [lat]); // Dependency array rỗng để chạy một lần
 
@@ -72,20 +82,24 @@ const Detail = (props) => {
             const weatherUrl = `${weather_baseURL}/current.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&aqi=yes`;
             const historyUrl = `${weather_baseURL}/history.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&dt=${formatDate(yesterday)}`;
             const forecastUrl = `${weather_baseURL}/forecast.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&days=3&aqi=yes&alerts=no`;
-            const [weatherResponse, historyResponse, forecastResponse] = await Promise.all([
+            const airQualityHourlyUrl = `${openweather_baseURL}/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}`;
+
+            const [weatherResponse, historyResponse, forecastResponse, airQualityHourlyResponse] = await Promise.all([
                 fetch(weatherUrl),
                 fetch(historyUrl),
-                fetch(forecastUrl)
+                fetch(forecastUrl),
+                fetch(airQualityHourlyUrl)
             ]);
 
             const weatherData = await weatherResponse.json();
             const historyData = await historyResponse.json();
             const forecastData = await forecastResponse.json();
+            const airQualityHourlyData = await airQualityHourlyResponse.json();
 
-            return { weatherData, historyData, forecastData };
+            return { weatherData, historyData, forecastData, airQualityHourlyData };
         };
 
-        const saveDataToStorage = async (lat, lon, weatherData, forecastData, multiDayWeatherData, combinedHoursData) => {
+        const saveDataToStorage = async (lat, lon, weatherData, forecastData, multiDayWeatherData, combinedHoursData, airQualityHourlyData) => {
             const timestamp = new Date().getTime();
             await AsyncStorage.setItem(`WEATHER_DATA_${lat}_${lon}`, JSON.stringify({
                 time: timestamp,
@@ -98,6 +112,7 @@ const Detail = (props) => {
             await AsyncStorage.setItem(`FORECAST_DATA_${lat}_${lon}`, JSON.stringify(forecastData.forecast.forecastday[0]));
             await AsyncStorage.setItem(`MULTIDAY_WEATHER_DATA_${lat}_${lon}`, JSON.stringify(multiDayWeatherData));
             await AsyncStorage.setItem(`TODAY_DATA_${lat}_${lon}`, JSON.stringify(combinedHoursData));
+            await AsyncStorage.setItem(`AIRQUALITY_HOURLY_DATA_${lat}_${lon}`, JSON.stringify(airQualityHourlyData));
         };
 
         try {
@@ -106,8 +121,9 @@ const Detail = (props) => {
             const saveForecastData = await AsyncStorage.getItem(`FORECAST_DATA_${lat}_${lon}`);
             const savedMultiDayWeatherData = await AsyncStorage.getItem(`MULTIDAY_WEATHER_DATA_${lat}_${lon}`);
             const saveTodayData = await AsyncStorage.getItem(`TODAY_DATA_${lat}_${lon}`);
+            const saveAirQUalityHourlyData = await AsyncStorage.getItem(`AIRQUALITY_HOURLY_DATA_${lat}_${lon}`);
 
-            if (savedWeatherData && savedAirQualityData && saveForecastData && savedMultiDayWeatherData && saveTodayData) {
+            if (savedWeatherData && savedAirQualityData && saveForecastData && savedMultiDayWeatherData && saveTodayData && saveAirQUalityHourlyData) {
                 const item = JSON.parse(savedWeatherData);
 
                 setWeatherData(item.data);
@@ -115,10 +131,11 @@ const Detail = (props) => {
                 setWeatherForecastData(JSON.parse(saveForecastData));
                 setMultiDayWeatherData(JSON.parse(savedMultiDayWeatherData));
                 setTodayData(JSON.parse(saveTodayData));
+                setAirQualityHourlyData(JSON.parse(saveAirQUalityHourlyData))
             } else {
                 setIsLoading(true);
 
-                const { weatherData, historyData, forecastData } = await fetchWeatherData();
+                const { weatherData, historyData, forecastData, airQualityHourlyData } = await fetchWeatherData();
 
                 setWeatherData(weatherData);
                 setWeatherForecastData(forecastData.forecast.forecastday[0]);
@@ -173,7 +190,10 @@ const Detail = (props) => {
                     forecast: combinedHoursData
                 });
 
-                await saveDataToStorage(lat, lon, weatherData, forecastData, multiDayWeatherData, combinedHoursData);
+                setAirQualityHourlyData(airQualityHourlyData)
+
+
+                await saveDataToStorage(lat, lon, weatherData, forecastData, multiDayWeatherData, combinedHoursData, airQualityHourlyData);
             }
         } catch (error) {
             setError('Có lỗi xảy ra khi gọi API thời tiết');
@@ -182,7 +202,7 @@ const Detail = (props) => {
             if (isMounted) setIsLoading(false);
         }
 
-        setTimeout(() => fetchData(isMounted), 1800 * 1000); // Cập nhật dữ liệu sau mỗi 30 phút
+        // setTimeout(() => fetchData(isMounted), 1800 * 1000); // Cập nhật dữ liệu sau mỗi 30 phút
     };
 
 
@@ -434,7 +454,7 @@ const Detail = (props) => {
                                 {' '}
                                 {weatherData.current.condition.text}
                             </Text>
-                            <TouchableOpacity style={styles.airQuality} onPress={() => { props.navigation.navigate('AirQualityDetail', { airQualityData, city, lat, lon }) }}>
+                            <TouchableOpacity style={styles.airQuality} onPress={() => { props.navigation.navigate('AirQualityDetail', { airQualityData, city, lat, lon, airQualityHourlyData }) }}>
                                 <Text style={styles.airQualityText}>
                                     <WeatherIcon name="weather-cloudy" style={styles.airQualityIcon} />
                                     <Text> AQI </Text>
@@ -552,7 +572,7 @@ const Detail = (props) => {
                         </View>
 
                         <TouchableOpacity
-                            onPress={() => props.navigation.navigate('AirQualityDetail', { airQualityData, city, lat, lon })}
+                            onPress={() => props.navigation.navigate('AirQualityDetail', { airQualityData, city, lat, lon, airQualityHourlyData })}
                             style={styles.buttonAirQuality}
                         >
                             <View>

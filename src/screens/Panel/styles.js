@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
         backgroundColor: COLORS.lightGrey,
         padding: 15,
-        borderRadius: 5
+        borderRadius: 5,
     },
     row: {
         flexDirection: 'row',

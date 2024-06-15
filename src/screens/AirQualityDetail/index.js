@@ -6,7 +6,7 @@ import { COLORS } from '../../components/theme'
 import { getAQIColor, getAQIForAllPollutants, getAQILevel, getOverallAQI } from '../../utils/AQI_Index'
 
 const AirQualityDetail = (props) => {
-    const { airQualityData, city, lat, lon } = props.route.params;
+    const { airQualityData, city, lat, lon, airQualityHourlyData } = props.route.params;
     const [currentAirQuality, setCurrentAirQuality] = useState('')
     const [time] = useState(new Date(airQualityData.current.last_updated_epoch * 1000).toLocaleTimeString('en-GB',
         {
@@ -110,7 +110,7 @@ const AirQualityDetail = (props) => {
 
                     <View style={styles.line} />
 
-                    <TouchableOpacity onPress={() => { props.navigation.navigate('AirQualityList', { city, airQualityData, lat, lon }) }}>
+                    <TouchableOpacity onPress={() => { props.navigation.navigate('AirQualityList', { city, airQualityData, lat, lon, airQualityHourlyData }) }}>
                         <View style={styles.moreInfo}>
                             <Text style={styles.moreInfoText}>Air Quality Forcast</Text>
                             <IonIcon name='chevron-forward' size={20} style={styles.moreInfoIcon} />
